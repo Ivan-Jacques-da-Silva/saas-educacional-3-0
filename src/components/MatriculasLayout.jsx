@@ -1,292 +1,224 @@
-
 import React, { useState, useEffect } from "react";
-import { Icon } from "@iconify/react";
-import { Link } from "react-router-dom";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from './config';
+import axios from "axios";
+import { Table, Button, Modal, Form, Row, Col } from "react-bootstrap";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 const MatriculasLayout = () => {
+    const navigate = useNavigate();
     const [matriculas, setMatriculas] = useState([]);
-    const [showModal, setShowModal] = useState(false);
-    const [matriculaDataToEdit, setMatriculaDataToEdit] = useState(null);
-    const [usuarios, setUsuarios] = useState({});
-    const [currentPage, setCurrentPage] = useState(1);
-    const [matriculasPerPage, setMatriculasPerPage] = useState(10);
+    const [loading, setLoading] = useState(true);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [matriculaToDelete, setMatriculaToDelete] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortDirection, setSortDirection] = useState("asc");
-    const [loading, setLoading] = useState(false);
-    const [statusFilter, setStatusFilter] = useState("");
-
-    useEffect(() => {
-        fetchMatriculas();
-    }, []);
-
-    const shouldFilterBySchool = () => {
-        const userType = localStorage.getItem('tipoUser');
-        return userType && parseInt(userType) >= 2; // Diretor para baixo
-    };
-
-    const getUserSchoolId = () => {
-        return localStorage.getItem('escolaId');
-    };
+    const [filteredMatriculas, setFilteredMatriculas] = useState([]);
 
     const fetchMatriculas = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/matriculas`);
-            const data = await response.json();
+            const response = await axios.get(`${API_BASE_URL}/api/matriculas`);
+            const matriculasData = response.data;
 
-            // Filtrar por escola se necessário
-            let filteredData = data;
-            if (shouldFilterBySchool()) {
-                const schoolId = getUserSchoolId();
-                if (schoolId) {
-                    filteredData = data.filter(matricula => 
-                        matricula.escola?.id === parseInt(schoolId)
-                    );
-                }
+            const userType = parseInt(localStorage.getItem('userType'), 10);
+            const schoolId = parseInt(localStorage.getItem('schoolId'), 10);
+
+            let filteredData = matriculasData;
+
+            // Filter based on user permissions
+            if (userType > 1 && schoolId) {
+                filteredData = matriculasData.filter(matricula => 
+                    matricula.usuario?.escolaId === schoolId
+                );
             }
 
             setMatriculas(filteredData);
-
-            // Buscar dados dos usuários
-            const uniqueUserIds = [
-                ...new Set(filteredData.map((matricula) => matricula.usuarioId)),
-            ];
-            const usersData = {};
-            for (const userId of uniqueUserIds) {
-                const responseUsuario = await fetch(
-                    `${API_BASE_URL}/users/${userId}`
-                );
-                const usuarioData = await responseUsuario.json();
-                usersData[userId] = usuarioData.nome;
-            }
-            setUsuarios(usersData);
+            setFilteredMatriculas(filteredData);
         } catch (error) {
             console.error("Erro ao buscar matrículas:", error);
+            toast.error("Erro ao carregar matrículas.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDelete = async (matriculaId) => {
+    useEffect(() => {
+        fetchMatriculas();
+    }, []);
+
+    useEffect(() => {
+        const filtered = matriculas.filter(matricula =>
+            matricula.usuario?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            matricula.curso?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            matricula.turma?.nome?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredMatriculas(filtered);
+    }, [searchTerm, matriculas]);
+
+    const handleDelete = async () => {
         try {
-            await fetch(`${API_BASE_URL}/matriculas/${matriculaId}`, {
-                method: "DELETE",
-            });
+            await axios.delete(`${API_BASE_URL}/api/matriculas/${matriculaToDelete}`);
+            toast.success("Matrícula excluída com sucesso!");
+            setShowDeleteModal(false);
+            setMatriculaToDelete(null);
             fetchMatriculas();
         } catch (error) {
             console.error("Erro ao excluir matrícula:", error);
+            toast.error("Erro ao excluir matrícula.");
         }
     };
 
-    const openEditModal = (matriculaId) => {
-        const matricula = matriculas.find((m) => m.id === matriculaId);
-        setMatriculaDataToEdit(matricula);
-        setShowModal(true);
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(value || 0);
     };
 
-    const closeModal = () => {
-        setShowModal(false);
-        fetchMatriculas();
+    const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
     };
 
-    const filteredMatriculas = matriculas.filter((matricula) => {
-        const nomeUsuario = usuarios[matricula.usuarioId]?.toLowerCase() || "";
-
-        const statusMatches = !statusFilter || matricula.status?.toLowerCase() === statusFilter.toLowerCase();
-
-        return nomeUsuario.includes(searchTerm.toLowerCase()) && statusMatches;
-    });
-
-    const totalPaginas = Math.ceil(filteredMatriculas.length / matriculasPerPage);
-
-    const paginasVisiveis = [];
-    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPaginas, currentPage + 2); i++) {
-        paginasVisiveis.push(i);
+    if (loading) {
+        return <div>Carregando...</div>;
     }
-
-    const currentMatriculas = filteredMatriculas.slice(
-        (currentPage - 1) * matriculasPerPage,
-        currentPage * matriculasPerPage
-    );
 
     return (
         <div className="card h-100 p-0 radius-12">
-            <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center flex-wrap gap-3 justify-content-between">
-                <div className="d-flex align-items-center flex-wrap gap-3">
-                    <span className="text-md fw-medium text-secondary-light mb-0">
-                        Mostrar
-                    </span>
-                    <select
-                        className="form-select form-select-sm w-auto ps-12 py-6 radius-12 h-40-px"
-                        defaultValue={matriculasPerPage}
-                        onChange={(e) => {
-                            setMatriculasPerPage(Number(e.target.value));
-                            setCurrentPage(1);
-                        }}
-                    >
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="30">30</option>
-                    </select>
-                    <form className="navbar-search">
-                        <input
-                            type="text"
-                            className="bg-base h-40-px w-auto"
-                            name="search"
-                            placeholder="Pesquisar"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <Icon icon="ion:search-outline" className="icon" />
-                    </form>
-                    <select
-                        className="form-select form-select-sm w-auto ps-12 py-6 radius-12 h-40-px"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                        <option value="">Todos os Status</option>
-                        <option value="ativo">Ativo</option>
-                        <option value="cancelado">Cancelado</option>
-                        <option value="trancado">Trancado</option>
-                        <option value="concluido">Concluído</option>
-                    </select>
-                </div>
-                <Link
-                    to="/cadastro-matricula"
-                    className="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
+            <ToastContainer />
+            <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+                <h6 className="text-lg fw-semibold mb-0">Lista de Matrículas</h6>
+                <Button 
+                    variant="primary" 
+                    onClick={() => navigate("/cadastro-matricula")}
                 >
-                    <Icon icon="ic:baseline-plus" className="icon text-xl line-height-1" />
-                    Adicionar Novo
-                </Link>
+                    Adicionar Matrícula
+                </Button>
             </div>
+
             <div className="card-body p-24">
+                <div className="mb-3">
+                    <Form.Control
+                        type="text"
+                        placeholder="Buscar por aluno, curso ou turma..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+
                 <div className="table-responsive scroll-sm">
-                    <table className="table bordered-table sm-table mb-0">
+                    <Table className="table bordered-table mb-0">
                         <thead>
                             <tr>
-                                <th>Aluno</th>
-                                <th>Status</th>
-                                <th>Valor</th>
-                                <th>Tipo Cobrança</th>
-                                <th className="text-center">Ação</th>
+                                <th scope="col">Aluno</th>
+                                <th scope="col">Curso</th>
+                                <th scope="col">Turma</th>
+                                <th scope="col">Data Matrícula</th>
+                                <th scope="col">Valor Total</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {loading ? (
-                                <tr>
-                                    <td colSpan="5" className="text-center">
-                                        Carregando...
-                                    </td>
-                                </tr>
-                            ) : (
-                                currentMatriculas.map((matricula) => (
+                            {filteredMatriculas.length > 0 ? (
+                                filteredMatriculas.map((matricula) => (
                                     <tr key={matricula.id}>
-                                        <td>{usuarios[matricula.usuarioId]}</td>
-                                        <td className="text-left">
-                                            <span
-                                                className={`badge ${matricula.status === "ativo"
-                                                    ? "bg-success-focus text-success-600 border border-success-main"
-                                                    : matricula.status === "cancelado"
-                                                        ? "bg-danger-focus text-danger-600 border border-danger-main"
-                                                        : matricula.status === "trancado"
-                                                            ? "bg-warning-focus text-warning-600 border border-warning-main"
-                                                            : matricula.status === "concluído"
-                                                                ? "bg-primary-focus text-primary-600 border border-primary-main"
-                                                                : "bg-neutral-200 text-neutral-600 border border-neutral-400"
-                                                    } px-24 py-4 radius-4 fw-medium text-sm`}
-                                            >
-                                                {matricula.status}
+                                        <td>
+                                            <div className="d-flex align-items-center">
+                                                <div>
+                                                    <h6 className="text-md mb-0 fw-medium">
+                                                        {matricula.usuario?.nome || 'N/A'}
+                                                    </h6>
+                                                    <span className="text-sm text-secondary-light fw-medium">
+                                                        {matricula.usuario?.email || 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className="text-md fw-medium">
+                                                {matricula.curso?.nome || 'N/A'}
                                             </span>
                                         </td>
-                                        <td>R$ {matricula.valorCurso?.toFixed(2)}</td>
-                                        <td>{matricula.tipoCobranca}</td>
-                                        <td className="text-center">
-                                            <Link
-                                                to={`/cadastro-matricula/${matricula.id}`}
-                                                className="w-32-px h-32-px me-8 bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
-                                            >
-                                                <Icon icon="lucide:edit" />
-                                            </Link>
-                                            <button
-                                                className="w-32-px h-32-px me-8 bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center border-0"
-                                                onClick={() => handleDelete(matricula.id)}
-                                            >
-                                                <Icon icon="mingcute:delete-2-line" />
-                                            </button>
+                                        <td>
+                                            <span className="text-md fw-medium">
+                                                {matricula.turma?.nome || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="text-md fw-medium">
+                                                {formatDate(matricula.dataMatricula)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="text-md fw-medium">
+                                                {formatCurrency(matricula.valorCurso)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${
+                                                matricula.status === 'Ativa' ? 'text-success-600 bg-success-100' :
+                                                matricula.status === 'Inativa' ? 'text-danger-600 bg-danger-100' :
+                                                'text-warning-600 bg-warning-100'
+                                            } px-20 py-9 radius-4 fw-medium text-sm`}>
+                                                {matricula.status || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="d-flex align-items-center gap-10">
+                                                <Button
+                                                    variant="outline-primary"
+                                                    size="sm"
+                                                    onClick={() => navigate(`/editar-matricula/${matricula.id}`)}
+                                                >
+                                                    Editar
+                                                </Button>
+                                                <Button
+                                                    variant="outline-danger"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setMatriculaToDelete(matricula.id);
+                                                        setShowDeleteModal(true);
+                                                    }}
+                                                >
+                                                    Excluir
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="7" className="text-center py-4">
+                                        Nenhuma matrícula encontrada
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
-                    </table>
-                </div>
-                <div className="d-flex align-items-center justify-content-between mt-24">
-                    <span>
-                        Mostrando {currentPage} de {Math.ceil(filteredMatriculas.length / matriculasPerPage)} páginas
-                    </span>
-                    <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
-                        <li className="page-item">
-                            <button
-                                className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px text-md"
-                                onClick={() => setCurrentPage(1)}
-                                disabled={currentPage === 1}
-                            >
-                                <Icon icon="ep:d-arrow-left" />
-                            </button>
-                        </li>
-                        <li className="page-item">
-                            <button
-                                className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px text-md"
-                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                            >
-                                Anterior
-                            </button>
-                        </li>
-                        {Array.from(
-                            {
-                                length: Math.min(5, Math.ceil(filteredMatriculas.length / matriculasPerPage)),
-                            },
-                            (_, idx) => idx + Math.max(1, Math.min(currentPage - 2, Math.ceil(filteredMatriculas.length / matriculasPerPage) - 4))
-                        ).map((page) => (
-                            <li key={page} className={`page-item ${currentPage === page ? "active" : ""}`}>
-                                <button
-                                    className={`page-link text-md fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px ${currentPage === page
-                                        ? "bg-primary-600 text-white"
-                                        : "bg-neutral-200 text-secondary-light"
-                                        }`}
-                                    onClick={() => setCurrentPage(page)}
-                                >
-                                    {page}
-                                </button>
-                            </li>
-                        ))}
-                        <li className="page-item">
-                            <button
-                                className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px text-md"
-                                onClick={() =>
-                                    setCurrentPage((prev) =>
-                                        Math.min(prev + 1, Math.ceil(filteredMatriculas.length / matriculasPerPage))
-                                    )
-                                }
-                                disabled={currentPage === Math.ceil(filteredMatriculas.length / matriculasPerPage)}
-                            >
-                                Próximo
-                            </button>
-                        </li>
-                        <li className="page-item">
-                            <button
-                                className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px text-md"
-                                onClick={() => setCurrentPage(Math.ceil(filteredMatriculas.length / matriculasPerPage))}
-                                disabled={currentPage === Math.ceil(filteredMatriculas.length / matriculasPerPage)}
-                            >
-                                <Icon icon="ep:d-arrow-right" />
-                            </button>
-                        </li>
-                    </ul>
+                    </Table>
                 </div>
             </div>
+
+            {/* Modal de Confirmação de Exclusão */}
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar Exclusão</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Tem certeza que deseja excluir esta matrícula? Esta ação não pode ser desfeita.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={handleDelete}>
+                        Excluir
+                    </Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 };
