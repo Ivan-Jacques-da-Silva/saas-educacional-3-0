@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form, Row, Col, Alert } from "react-bootstrap";
 import { toast } from "react-toastify";
@@ -50,7 +49,7 @@ const CadastroCursoModal = ({ show, onHide, cursoToEdit, onCursoSaved }) => {
 
   const fetchInstrutores = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/users`);
+      const response = await axios.get(`${API_BASE_URL}/users`);
       const instrutoresData = response.data.filter(user => 
         user.tipoUser === "Diretor" || user.tipoUser === "Professor"
       );
@@ -99,7 +98,7 @@ const CadastroCursoModal = ({ show, onHide, cursoToEdit, onCursoSaved }) => {
 
     try {
       const formDataToSend = new FormData();
-      
+
       Object.keys(formData).forEach(key => {
         if (key === 'arquivo' && formData[key]) {
           formDataToSend.append(key, formData[key]);
@@ -158,7 +157,7 @@ const CadastroCursoModal = ({ show, onHide, cursoToEdit, onCursoSaved }) => {
             {alertMessage}
           </Alert>
         )}
-        
+
         <Form onSubmit={handleSubmit}>
           <Row>
             <Col md={6}>
