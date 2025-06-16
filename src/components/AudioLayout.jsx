@@ -108,7 +108,14 @@ const Audios = () => {
     };
 
 
+    const shouldFilterBySchool = () => {
+        const userType = localStorage.getItem('tipoUser');
+        return userType && parseInt(userType) >= 2; // Diretor para baixo
+    };
 
+    const getUserSchoolId = () => {
+        return localStorage.getItem('escolaId');
+    };
 
     const fetchAudios = async (cursoId) => {
         setLoading(true);
@@ -116,6 +123,16 @@ const Audios = () => {
         try {
             const response = await fetch(`${API_BASE_URL}/audios-curso/${cursoId}`);
             const data = await response.json();
+
+            let filteredData = data;
+            if (shouldFilterBySchool()) {
+                const schoolId = getUserSchoolId();
+                if (schoolId) {
+                    filteredData = data.filter(audio =>
+                        audio.cp_curso_id === cursoId && audio.cp_escola_id === parseInt(schoolId)
+                    );
+                }
+            }
             data.sort((a, b) => a.cp_nome_audio.localeCompare(b.cp_nome_audio, undefined, { numeric: true, sensitivity: 'base' }));
             setAudios(data);
             setSelectedCursoId(cursoId);

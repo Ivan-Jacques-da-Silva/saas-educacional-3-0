@@ -28,13 +28,32 @@ const TurmaLayout = () => {
         setCurrentPage(1);
     }, [searchTerm, turmas]);
 
+    const shouldFilterBySchool = () => {
+        const userType = localStorage.getItem('tipoUser');
+        return userType && parseInt(userType) >= 2; // Diretor para baixo
+    };
+
+    const getUserSchoolId = () => {
+        return localStorage.getItem('escolaId');
+    };
+
     const fetchTurmas = async () => {
         setIsLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/turmas`);
             const data = await response.json();
-            setTurmas(data);
-            setFilteredTurmas(data);
+            
+            // Filtrar por escola se necessário
+            let filteredData = data;
+            if (shouldFilterBySchool()) {
+                const schoolId = getUserSchoolId();
+                if (schoolId) {
+                    filteredData = data.filter(turma => turma.escolaId === parseInt(schoolId));
+                }
+            }
+            
+            setTurmas(filteredData);
+            setFilteredTurmas(filteredData);
         } catch (error) {
             console.error("Erro ao buscar turmas:", error);
         } finally {

@@ -27,13 +27,32 @@ const CursosLayout = () => {
         setCurrentPage(1);
     }, [searchTerm, cursos]);
 
+    const shouldFilterBySchool = () => {
+        const userType = localStorage.getItem('tipoUser');
+        return userType && parseInt(userType) >= 2; // Diretor para baixo
+    };
+
+    const getUserSchoolId = () => {
+        return localStorage.getItem('escolaId');
+    };
+
     const fetchCursos = async () => {
         setIsLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/cursos`);
             const data = await response.json();
-            setCursos(data);
-            setFilteredCursos(data);
+            
+            // Filtrar por escola se necessário
+            let filteredData = data;
+            if (shouldFilterBySchool()) {
+                const schoolId = getUserSchoolId();
+                if (schoolId) {
+                    filteredData = data.filter(curso => curso.escolaId === parseInt(schoolId));
+                }
+            }
+            
+            setCursos(filteredData);
+            setFilteredCursos(filteredData);
         } catch (error) {
             console.error("Erro ao buscar cursos:", error);
         } finally {

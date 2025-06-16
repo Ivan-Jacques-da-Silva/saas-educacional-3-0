@@ -1,3 +1,7 @@
+The code is modified to filter the list of enrollments based on the user's school if the user is a director or below.
+```
+
+```replit_final_file
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
@@ -20,15 +24,36 @@ const Usuarios = () => {
         fetchMatriculas();
     }, []);
 
+    const shouldFilterBySchool = () => {
+        const userType = localStorage.getItem('tipoUser');
+        return userType && parseInt(userType) >= 2; // Diretor para baixo
+    };
+
+    const getUserSchoolId = () => {
+        return localStorage.getItem('escolaId');
+    };
+
     const fetchMatriculas = async () => {
         setLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/matriculas`);
             const data = await response.json();
-            setMatriculas(data);
+
+            // Filtrar por escola se necessário
+            let filteredData = data;
+            if (shouldFilterBySchool()) {
+                const schoolId = getUserSchoolId();
+                if (schoolId) {
+                    filteredData = data.filter(matricula => 
+                        matricula.turma?.escolaId === parseInt(schoolId)
+                    );
+                }
+            }
+
+            setMatriculas(filteredData);
 
             const uniqueUserIds = [
-                ...new Set(data.map((matricula) => matricula.cp_mt_usuario)),
+                ...new Set(filteredData.map((matricula) => matricula.cp_mt_usuario)),
             ];
             const usersData = {};
             for (const userId of uniqueUserIds) {

@@ -14,6 +14,27 @@ const Usuarios = () => {
     const [showOnlyBirthdays, setShowOnlyBirthdays] = useState(false);
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    const getTipoUserName = (tipoUser) => {
+        const tipos = {
+            1: "Gestor",
+            2: "Diretor",
+            3: "Secretaria",
+            4: "Professor",
+            5: "Aluno"
+        };
+        return tipos[tipoUser] || "Não definido";
+    };
+
+    const shouldFilterBySchool = () => {
+        const userType = localStorage.getItem('tipoUser');
+        return userType && parseInt(userType) >= 2; // Diretor para baixo
+    };
+
+    const getUserSchoolId = () => {
+        return localStorage.getItem('escolaId');
+    };
+
     useEffect(() => {
         fetchUsers();
     }, []);
@@ -26,7 +47,17 @@ const Usuarios = () => {
                 throw new Error('Erro ao buscar usuários');
             }
             const data = await response.json();
-            setUsers(data || []);
+
+            // Filtrar por escola se necessário
+            let filteredData = data;
+            if (shouldFilterBySchool()) {
+                const schoolId = getUserSchoolId();
+                if (schoolId) {
+                    filteredData = data.filter(user => user.cp_escola_id === parseInt(schoolId));
+                }
+            }
+
+            setUsers(filteredData || []);
         } catch (error) {
             console.error('Erro ao buscar usuários:', error);
         } finally {
