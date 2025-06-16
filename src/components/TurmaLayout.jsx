@@ -42,7 +42,7 @@ const TurmaLayout = () => {
         try {
             const response = await fetch(`${API_BASE_URL}/turmas`);
             const data = await response.json();
-            
+
             // Filtrar por escola se necessário
             let filteredData = data;
             if (shouldFilterBySchool()) {
@@ -51,7 +51,7 @@ const TurmaLayout = () => {
                     filteredData = data.filter(turma => turma.escolaId === parseInt(schoolId));
                 }
             }
-            
+
             setTurmas(filteredData);
             setFilteredTurmas(filteredData);
         } catch (error) {

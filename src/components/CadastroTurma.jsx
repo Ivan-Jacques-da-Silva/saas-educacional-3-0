@@ -15,6 +15,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
     cp_tr_id_escola: "",
     cp_tr_alunos: [],
     cp_tr_curso_id: "",
+    cp_tr_dias_semana: [],
   });
   useEffect(() => {
     console.log("turmaID recebido:", turmaID);
@@ -181,6 +182,17 @@ const CadastroTurmaModal = ({ turmaID }) => {
     });
   };
 
+  const handleDiasSemanaChange = (e) => {
+    const { value, checked } = e.target;
+    setTurmaData((prevData) => {
+      const updatedDias = checked
+        ? [...prevData.cp_tr_dias_semana, value]
+        : prevData.cp_tr_dias_semana.filter((dia) => dia !== value);
+      
+      return { ...prevData, cp_tr_dias_semana: updatedDias };
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -191,7 +203,8 @@ const CadastroTurmaModal = ({ turmaID }) => {
         cp_tr_id_professor: turmaData.cp_tr_id_professor,
         cp_tr_id_escola: turmaData.cp_tr_id_escola,
         cp_tr_curso_id: turmaData.cp_tr_curso_id,
-        cp_tr_alunos: turmaData.cp_tr_alunos
+        cp_tr_alunos: turmaData.cp_tr_alunos,
+        cp_tr_dias_semana: turmaData.cp_tr_dias_semana
       };
 
       let response;
@@ -211,7 +224,8 @@ const CadastroTurmaModal = ({ turmaID }) => {
           cp_tr_id_professor: "",
           cp_tr_id_escola: "",
           cp_tr_curso_id: "",
-          cp_tr_alunos: []
+          cp_tr_alunos: [],
+          cp_tr_dias_semana: []
         });
       }
 
@@ -321,11 +335,37 @@ const CadastroTurmaModal = ({ turmaID }) => {
                     >
                       <option value="">Selecione o curso</option>
                       {cursos.map((curso) => (
-                        <option key={curso.cp_curso_id} value={curso.cp_curso_id}>
-                          {curso.cp_nome_curso}
+                        <option key={curso.id} value={curso.id}>
+                          {curso.titulo}
                         </option>
                       ))}
                     </select>
+                  </Col>
+
+                  <Col md={12}>
+                    <label>Dias da Semana<span className="required">*</span>:</label>
+                    <div className="d-flex flex-wrap gap-3 mt-2">
+                      {[
+                        { value: "segunda", label: "Segunda" },
+                        { value: "terca", label: "Terça" },
+                        { value: "quarta", label: "Quarta" },
+                        { value: "quinta", label: "Quinta" },
+                        { value: "sexta", label: "Sexta" },
+                        { value: "sabado", label: "Sábado" },
+                        { value: "domingo", label: "Domingo" }
+                      ].map((dia) => (
+                        <Form.Check
+                          key={dia.value}
+                          type="checkbox"
+                          id={`dia-${dia.value}`}
+                          label={dia.label}
+                          value={dia.value}
+                          checked={turmaData.cp_tr_dias_semana.includes(dia.value)}
+                          onChange={handleDiasSemanaChange}
+                          className="d-flex align-items-center"
+                        />
+                      ))}
+                    </div>
                   </Col>
                 </Row>
               </div>

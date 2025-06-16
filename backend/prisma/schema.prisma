@@ -107,6 +107,7 @@ model Curso {
   dataPublicacao   DateTime @default(now()) @map("cp_cr_data_publicacao")
   tags             String?  @map("cp_cr_tags")
   arquivo          String?  @map("cp_cr_arquivo")
+  turmas           Turma[]
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
@@ -116,16 +117,15 @@ model Curso {
 model Turma {
   id           Int     @id @default(autoincrement()) @map("cp_tr_id")
   nome         String  @map("cp_tr_nome")
-  descricao    String? @map("cp_tr_descricao")
+  data         DateTime @map("cp_tr_data")
   professorId  Int?    @map("cp_tr_professor_id")
   professor    User?   @relation("TurmaProfessor", fields: [professorId], references: [id])
   escolaId     Int?    @map("cp_tr_escola_id")
   escola       Escola? @relation(fields: [escolaId], references: [id])
-  horarioInicio String? @map("cp_tr_horario_inicio")
-  horarioFim   String? @map("cp_tr_horario_fim")
+  cursoId      Int?    @map("cp_tr_curso_id")
+  curso        Curso?  @relation(fields: [cursoId], references: [id])
   diasSemana   String? @map("cp_tr_dias_semana")
   status       String  @default("ativo") @map("cp_tr_status")
-  maxAlunos    Int?    @map("cp_tr_max_alunos")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
