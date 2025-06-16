@@ -74,8 +74,19 @@ const CadastroUsuarioModal = ({ userId }) => {
     useEffect(() => {
         const fetchEscolas = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL_NEW}/escolas`);
-                setEscolas(response.data);
+                const response = await axios.get(`${API_BASE_URL_NEW}/api/escolas`);
+                let escolasFiltradas = response.data;
+
+                // Se não for gestor (tipoUser 1), filtrar por escola do usuário
+                const userType = parseInt(localStorage.getItem('tipoUser'));
+                if (userType && userType > 1) {
+                    const userSchoolId = parseInt(localStorage.getItem('escolaId'));
+                    if (userSchoolId) {
+                        escolasFiltradas = response.data.filter(escola => escola.cp_ec_id === userSchoolId);
+                    }
+                }
+
+                setEscolas(escolasFiltradas);
             } catch (error) {
                 console.error("Erro ao buscar escolas:", error);
             }

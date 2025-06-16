@@ -64,7 +64,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
     const fetchUsuarios = async () => {
         try {
             const response = await axios.get(`${API_BASE_URL_NEW}/api/users`);
-            const diretores = response.data.filter(user => user.tipoUser === "2" || user.tipoUser === 2);
+            const diretores = response.data.filter(user => user.cp_tipo_user === 2);
             setUsuarios(diretores);
         } catch (error) {
             console.error("Erro ao buscar usuários:", error);
@@ -266,7 +266,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         required
                                     />
                                 </Col>
-                                <Col md={4}>
+                                <Col md={6}>
                                     <label htmlFor="estado">Estado<span className="required">*</span>:</label>
                                     <select
                                         id="estado"
@@ -297,7 +297,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         required
                                     />
                                 </Col>
-                                <Col md={2}>
+                                <Col md={6}>
                                     <label htmlFor="numero">Número<span className="required">*</span>:</label>
                                     <input
                                         type="text"
