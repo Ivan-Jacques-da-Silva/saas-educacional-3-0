@@ -955,7 +955,7 @@ app.delete('/api/cursos/:id', async (req: Request, res: Response) => {
 });
 
 // Rota para buscar usuário por ID
-app.get('/users/:id', async (req, res) => {
+app.get('/api/users/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const user = await prisma.user.findUnique({
@@ -979,7 +979,7 @@ app.get('/users/:id', async (req, res) => {
 });
 
 // Rota para alterar senha
-app.put('/change-password/:id', async (req, res) => {
+app.put('/api/change-password/:id', async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { currentPassword, newPassword } = req.body;
@@ -1020,7 +1020,7 @@ app.put('/change-password/:id', async (req, res) => {
 });
 
 // Rota para editar usuário
-app.put('/edit-user/:id', upload.single('cp_foto_perfil'), async (req, res) => {
+app.put('/api/edit-user/:id', upload.single('cp_foto_perfil'), async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const userData = req.body;
@@ -1073,6 +1073,361 @@ app.put('/edit-user/:id', upload.single('cp_foto_perfil'), async (req, res) => {
     res.json({ message: 'Usuário atualizado com sucesso', user: userWithoutPassword });
   } catch (error) {
     console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota de registro (alias para /api/users)
+app.post('/api/register', upload.single('cp_foto_perfil'), async (req: Request, res: Response) => {
+  try {
+    const {
+      cp_nome,
+      cp_email,
+      cp_login,
+      cp_password,
+      cp_tipo_user,
+      cp_rg,
+      cp_cpf,
+      cp_datanascimento,
+      cp_estadocivil,
+      cp_cnpj,
+      cp_ie,
+      cp_whatsapp,
+      cp_telefone,
+      cp_empresaatuacao,
+      cp_profissao,
+      cp_end_cidade_estado,
+      cp_end_rua,
+      cp_end_num,
+      cp_end_cep,
+      cp_descricao,
+      cp_escola_id
+    } = req.body;
+
+    // Verificar se usuário já existe
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: cp_email },
+          { login: cp_login }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.json({ exists: true });
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(cp_password, 10);
+
+    // Criar usuário
+    const newUser = await prisma.user.create({
+      data: {
+        nome: cp_nome,
+        email: cp_email,
+        login: cp_login,
+        password: hashedPassword,
+        tipoUser: parseInt(cp_tipo_user),
+        rg: cp_rg || null,
+        cpf: cp_cpf,
+        dataNascimento: cp_datanascimento,
+        estadoCivil: cp_estadocivil || null,
+        cnpj: cp_cnpj || null,
+        ie: cp_ie || null,
+        whatsapp: cp_whatsapp || null,
+        telefone: cp_telefone || null,
+        empresaAtuacao: cp_empresaatuacao || null,
+        profissao: cp_profissao || null,
+        endCidadeEstado: cp_end_cidade_estado || null,
+        endRua: cp_end_rua || null,
+        endNum: cp_end_num || null,
+        endCep: cp_end_cep || null,
+        descricao: cp_descricao || null,
+        escolaId: cp_escola_id ? parseInt(cp_escola_id) : null,
+        fotoPerfil: req.file ? req.file.filename : null
+      }
+    });
+
+    res.status(201).json({ exists: false, user: newUser });
+  } catch (error) {
+    logError('POST /api/register', error, req);
+    console.error('Erro ao criar usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rotas para Turmas
+app.get('/api/turmas', async (req: Request, res: Response) => {
+  try {
+    const turmas = await prisma.turma.findMany({
+      include: {
+        professor: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        },
+        escola: {
+          select: {
+            id: true,
+            nome: true
+          }
+        }
+      },
+      orderBy: { nome: 'asc' }
+    });
+    res.json(turmas);
+  } catch (error) {
+    logError('GET /api/turmas', error, req);
+    console.error('Erro ao buscar turmas:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.post('/api/turmas', async (req: Request, res: Response) => {
+  try {
+    const {
+      nome,
+      descricao,
+      professorId,
+      escolaId,
+      horarioInicio,
+      horarioFim,
+      diasSemana,
+      status,
+      maxAlunos
+    } = req.body;
+
+    const newTurma = await prisma.turma.create({
+      data: {
+        nome,
+        descricao,
+        professorId: professorId ? parseInt(professorId) : null,
+        escolaId: escolaId ? parseInt(escolaId) : null,
+        horarioInicio,
+        horarioFim,
+        diasSemana,
+        status: status || 'ativo',
+        maxAlunos: maxAlunos ? parseInt(maxAlunos) : null
+      },
+      include: {
+        professor: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        },
+        escola: {
+          select: {
+            id: true,
+            nome: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({ message: 'Turma cadastrada com sucesso', turma: newTurma });
+  } catch (error) {
+    logError('POST /api/turmas', error, req);
+    console.error('Erro ao criar turma:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.put('/api/turmas/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const {
+      nome,
+      descricao,
+      professorId,
+      escolaId,
+      horarioInicio,
+      horarioFim,
+      diasSemana,
+      status,
+      maxAlunos
+    } = req.body;
+
+    const updatedTurma = await prisma.turma.update({
+      where: { id: parseInt(id) },
+      data: {
+        nome,
+        descricao,
+        professorId: professorId ? parseInt(professorId) : null,
+        escolaId: escolaId ? parseInt(escolaId) : null,
+        horarioInicio,
+        horarioFim,
+        diasSemana,
+        status: status || 'ativo',
+        maxAlunos: maxAlunos ? parseInt(maxAlunos) : null
+      },
+      include: {
+        professor: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        },
+        escola: {
+          select: {
+            id: true,
+            nome: true
+          }
+        }
+      }
+    });
+
+    res.json({ message: 'Turma atualizada com sucesso', turma: updatedTurma });
+  } catch (error) {
+    logError(`PUT /api/turmas/${req.params.id}`, error, req);
+    console.error('Erro ao atualizar turma:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.delete('/api/turmas/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.turma.delete({
+      where: { id: parseInt(id) }
+    });
+
+    res.json({ message: 'Turma excluída com sucesso' });
+  } catch (error) {
+    logError(`DELETE /api/turmas/${req.params.id}`, error, req);
+    console.error('Erro ao excluir turma:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rotas para Áudios
+app.get('/api/audios', async (req: Request, res: Response) => {
+  try {
+    const audios = await prisma.audio.findMany({
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { titulo: 'asc' }
+    });
+    res.json(audios);
+  } catch (error) {
+    logError('GET /api/audios', error, req);
+    console.error('Erro ao buscar áudios:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.post('/api/audios', upload.single('arquivo'), async (req: Request, res: Response) => {
+  try {
+    const {
+      titulo,
+      descricao,
+      usuarioId,
+      categoria,
+      duracao,
+      status
+    } = req.body;
+
+    const newAudio = await prisma.audio.create({
+      data: {
+        titulo,
+        descricao,
+        usuarioId: usuarioId ? parseInt(usuarioId) : null,
+        categoria,
+        duracao,
+        status: status || 'ativo',
+        arquivo: req.file ? req.file.filename : null
+      },
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({ message: 'Áudio cadastrado com sucesso', audio: newAudio });
+  } catch (error) {
+    logError('POST /api/audios', error, req);
+    console.error('Erro ao criar áudio:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.put('/api/audios/:id', upload.single('arquivo'), async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const {
+      titulo,
+      descricao,
+      usuarioId,
+      categoria,
+      duracao,
+      status
+    } = req.body;
+
+    const updateData: any = {
+      titulo,
+      descricao,
+      usuarioId: usuarioId ? parseInt(usuarioId) : null,
+      categoria,
+      duracao,
+      status: status || 'ativo'
+    };
+
+    if (req.file) {
+      updateData.arquivo = req.file.filename;
+    }
+
+    const updatedAudio = await prisma.audio.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nome: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.json({ message: 'Áudio atualizado com sucesso', audio: updatedAudio });
+  } catch (error) {
+    logError(`PUT /api/audios/${req.params.id}`, error, req);
+    console.error('Erro ao atualizar áudio:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+app.delete('/api/audios/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    await prisma.audio.delete({
+      where: { id: parseInt(id) }
+    });
+
+    res.json({ message: 'Áudio excluído com sucesso' });
+  } catch (error) {
+    logError(`DELETE /api/audios/${req.params.id}`, error, req);
+    console.error('Erro ao excluir áudio:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });

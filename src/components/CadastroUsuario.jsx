@@ -160,7 +160,7 @@ const CadastroUsuarioModal = ({ userId }) => {
         try {
             if (userId) {
                 // Modo de edição: Enviar como JSON, pois o backend espera JSON e não FormData
-                const response = await axios.put(`${API_BASE_URL_NEW}/edit-user/${userId}`, userData, {
+                const response = await axios.put(`${API_BASE_URL_NEW}/api/edit-user/${userId}`, userData, {
                     headers: { "Content-Type": "application/json" }, // Alterado para JSON
                 });
 

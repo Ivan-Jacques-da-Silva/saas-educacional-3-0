@@ -49,7 +49,7 @@ const ViewProfileLayer = () => {
                 return;
             }
 
-            const response = await axios.get(`${API_BASE_URL_NEW}/users/${userId}`);
+            const response = await axios.get(`${API_BASE_URL_NEW}/api/users/${userId}`);
             setUserData(response.data);
             
             // Definir imagem de preview se existir
@@ -102,7 +102,7 @@ const ViewProfileLayer = () => {
                 }
             });
 
-            const response = await axios.put(`${API_BASE_URL_NEW}/edit-user/${userId}`, formData, {
+            const response = await axios.put(`${API_BASE_URL_NEW}/api/edit-user/${userId}`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
@@ -139,7 +139,7 @@ const ViewProfileLayer = () => {
 
         try {
             const userId = localStorage.getItem('userId');
-            const response = await axios.put(`${API_BASE_URL_NEW}/change-password/${userId}`, {
+            const response = await axios.put(`${API_BASE_URL_NEW}/api/change-password/${userId}`, {
                 currentPassword,
                 newPassword
             });

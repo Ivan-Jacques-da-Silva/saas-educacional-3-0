@@ -1,54 +1,93 @@
-
-import React, { useState, useEffect } from "react";
-import { Icon } from "@iconify/react";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { API_BASE_URL_NEW } from './config';
-import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 const MatriculasLayout = () => {
     const [matriculas, setMatriculas] = useState([]);
+    const [usuarios, setUsuarios] = useState([]);
+    const [escolas, setEscolas] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filteredMatriculas, setFilteredMatriculas] = useState([]);
+    const [error, setError] = useState('');
+
+    // Verificar tipo de usuário e escola do localStorage
+    const userType = parseInt(localStorage.getItem('tipoUser')) || 0;
+    const userSchoolId = parseInt(localStorage.getItem('escolaId')) || 0;
 
     useEffect(() => {
         fetchMatriculas();
+        fetchUsuarios();
+        fetchEscolas();
     }, []);
-
-    useEffect(() => {
-        // Filtrar matrículas baseado no termo de busca
-        const filtered = matriculas.filter(matricula =>
-            matricula.usuario?.cp_nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            matricula.escola?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            matricula.cp_mt_nivel_idioma?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredMatriculas(filtered);
-    }, [matriculas, searchTerm]);
 
     const fetchMatriculas = async () => {
         try {
-            setLoading(true);
             const response = await axios.get(`${API_BASE_URL_NEW}/api/matriculas`);
             let matriculasData = response.data;
 
-            // Filtrar por escola se o usuário não for gestor
-            const userType = parseInt(localStorage.getItem('tipoUser'));
-            if (userType && userType > 1) {
-                const userSchoolId = parseInt(localStorage.getItem('escolaId'));
-                if (userSchoolId) {
-                    matriculasData = matriculasData.filter(matricula => 
-                        matricula.cp_mt_escola_id === userSchoolId
-                    );
-                }
+            // Filtrar por escola se usuário for diretor ou abaixo (tipo 2 a 5)
+            if (userType >= 2 && userSchoolId) {
+                matriculasData = matriculasData.filter(matricula => 
+                    matricula.escolaId === userSchoolId
+                );
             }
 
             setMatriculas(matriculasData);
         } catch (error) {
-            console.error("Erro ao buscar matrículas:", error);
-            toast.error("Erro ao carregar matrículas");
+            console.error('Erro ao buscar matrículas:', error);
+            setError('Erro ao carregar matrículas');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchUsuarios = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL_NEW}/api/usuarios-matricula`);
+            let usuariosData = response.data;
+
+            // Filtrar por escola se usuário for diretor ou abaixo (tipo 2 a 5)
+            if (userType >= 2 && userSchoolId) {
+                usuariosData = usuariosData.filter(usuario => 
+                    usuario.escolaId === userSchoolId
+                );
+            }
+
+            setUsuarios(usuariosData);
+        } catch (error) {
+            console.error('Erro ao buscar usuários:', error);
+        }
+    };
+
+    const fetchEscolas = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL_NEW}/api/escolas`);
+            let escolasData = response.data;
+
+            // Filtrar por escola se usuário for diretor ou abaixo (tipo 2 a 5)
+            if (userType >= 2 && userSchoolId) {
+                escolasData = escolasData.filter(escola => 
+                    escola.id === userSchoolId
+                );
+            }
+
+            setEscolas(escolasData);
+        } catch (error) {
+            console.error('Erro ao buscar escolas:', error);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Tem certeza que deseja excluir esta matrícula?')) {
+            return;
+        }
+
+        try {
+            await axios.delete(`${API_BASE_URL_NEW}/api/matriculas/${id}`);
+            fetchMatriculas();
+            alert('Matrícula excluída com sucesso!');
+        } catch (error) {
+            console.error('Erro ao excluir matrícula:', error);
+            alert('Erro ao excluir matrícula');
         }
     };
 
@@ -60,27 +99,19 @@ const MatriculasLayout = () => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
+        if (!dateString) return '-';
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
-    const getTipoCobrancaLabel = (tipo) => {
-        return tipo === 'parcelado' ? 'Parcelado' : 'Mensalidade';
-    };
-
-    const getStatusBadge = (status) => {
-        const statusMap = {
-            'ativo': { class: 'bg-success-focus text-success-600', text: 'Ativo' },
-            'inativo': { class: 'bg-danger-focus text-danger-600', text: 'Inativo' },
-            'pendente': { class: 'bg-warning-focus text-warning-600', text: 'Pendente' },
+    const getTipoUserName = (tipo) => {
+        const tipos = {
+            1: 'Gestor',
+            2: 'Diretor',
+            3: 'Secretário',
+            4: 'Professor',
+            5: 'Aluno'
         };
-        
-        const statusInfo = statusMap[status] || { class: 'bg-neutral-200 text-neutral-600', text: status };
-        return (
-            <span className={`badge ${statusInfo.class} px-16 py-4 radius-4 fw-medium text-sm`}>
-                {statusInfo.text}
-            </span>
-        );
+        return tipos[tipo] || 'Indefinido';
     };
 
     if (loading) {
@@ -94,227 +125,159 @@ const MatriculasLayout = () => {
     }
 
     return (
-        <>
-            <ToastContainer />
-            <div className="card h-100 p-0 radius-12">
-                <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center flex-wrap gap-3 justify-content-between">
-                    <div className="d-flex align-items-center flex-wrap gap-3">
-                        <span className="text-md fw-medium text-secondary-light mb-0">
-                            Mostrar
-                        </span>
-                        <select className="form-select form-select-sm w-auto ps-12 py-6 radius-12 h-40-px">
-                            <option>1</option>
-                            <option>2</option>
-                            <option>3</option>
-                            <option>4</option>
-                            <option>5</option>
-                            <option>6</option>
-                            <option>7</option>
-                            <option>8</option>
-                            <option>9</option>
-                            <option>10</option>
-                        </select>
-                        <form className="navbar-search">
-                            <input
-                                type="text"
-                                className="bg-base h-40-px w-auto"
-                                name="search"
-                                placeholder="Buscar matrículas..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            <Icon icon="ion:search-outline" className="icon" />
-                        </form>
-                    </div>
-                    <a
-                        href="/cadastro-matricula"
-                        className="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
-                    >
-                        <Icon
-                            icon="ic:baseline-plus"
-                            className="icon text-xl line-height-1"
-                        />
-                        Adicionar Matrícula
-                    </a>
+        <div className="card h-100 p-0 radius-12">
+            <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center flex-wrap gap-3 justify-content-between">
+                <div className="d-flex align-items-center flex-wrap gap-3">
+                    <span className="text-md fw-medium text-secondary-light mb-0">Mostrando</span>
+                    <select className="form-select form-select-sm w-auto ps-12 py-6 radius-12 h-40-px">
+                        <option>10</option>
+                        <option>25</option>
+                        <option>50</option>
+                    </select>
+                    <span className="text-md fw-medium text-secondary-light mb-0">de {matriculas.length} matrículas</span>
                 </div>
-                
-                <div className="card-body p-24">
-                    <div className="table-responsive scroll-sm">
-                        <table className="table bordered-table sm-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col">
-                                        <div className="d-flex align-items-center gap-10">
-                                            <div className="form-check style-check d-flex align-items-center">
-                                                <input
-                                                    className="form-check-input radius-4 border input-form-dark"
-                                                    type="checkbox"
-                                                    name="checkbox"
-                                                    id="selectAll"
-                                                />
-                                            </div>
-                                            S.L
+                <a href="/cadastro-matricula" className="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2">
+                    <i className="ri-add-line"></i>
+                    Nova Matrícula
+                </a>
+            </div>
+
+            <div className="card-body p-24">
+                {error && (
+                    <div className="alert alert-danger" role="alert">
+                        {error}
+                    </div>
+                )}
+
+                <div className="table-responsive scroll-sm">
+                    <table className="table bordered-table sm-table mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <div className="d-flex align-items-center gap-10">
+                                        <div className="form-check style-check d-flex align-items-center">
+                                            <input className="form-check-input radius-4 border border-neutral-400" type="checkbox" />
                                         </div>
-                                    </th>
-                                    <th scope="col">Aluno</th>
-                                    <th scope="col">Escola</th>
-                                    <th scope="col">Valor do Curso</th>
-                                    <th scope="col">Tipo de Cobrança</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Nível Idioma</th>
-                                    <th scope="col">Data Cadastro</th>
-                                    <th scope="col" className="text-center">
-                                        Ação
-                                    </th>
+                                        S.L
+                                    </div>
+                                </th>
+                                <th scope="col">Aluno</th>
+                                <th scope="col">Escola</th>
+                                <th scope="col">Valor Curso</th>
+                                <th scope="col">Tipo Cobrança</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Data Cadastro</th>
+                                <th scope="col" className="text-center">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {matriculas.length === 0 ? (
+                                <tr>
+                                    <td colSpan="8" className="text-center py-4">
+                                        Nenhuma matrícula encontrada
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {filteredMatriculas.length > 0 ? (
-                                    filteredMatriculas.map((matricula, index) => (
-                                        <tr key={matricula.cp_mt_id || index}>
-                                            <td>
-                                                <div className="d-flex align-items-center gap-10">
-                                                    <div className="form-check style-check d-flex align-items-center">
-                                                        <input
-                                                            className="form-check-input radius-4 border border-neutral-400"
-                                                            type="checkbox"
-                                                            name="checkbox"
-                                                        />
-                                                    </div>
-                                                    {index + 1}
+                            ) : (
+                                matriculas.map((matricula, index) => (
+                                    <tr key={matricula.id}>
+                                        <td>
+                                            <div className="d-flex align-items-center gap-10">
+                                                <div className="form-check style-check d-flex align-items-center">
+                                                    <input className="form-check-input radius-4 border border-neutral-400" type="checkbox" />
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <div className="d-flex align-items-center">
-                                                    <div className="">
-                                                        <h6 className="text-md mb-0 fw-medium flex-grow-1">
-                                                            {matricula.usuario?.cp_nome || 'N/A'}
-                                                        </h6>
-                                                        <span className="text-sm text-secondary-light fw-medium">
-                                                            {matricula.usuario?.cp_email || 'N/A'}
-                                                        </span>
-                                                    </div>
+                                                {index + 1}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="d-flex align-items-center">
+                                                <div>
+                                                    <h6 className="text-md mb-0 fw-medium flex-grow-1">
+                                                        {matricula.usuario?.nome || 'N/A'}
+                                                    </h6>
+                                                    <span className="text-sm text-secondary-light fw-medium">
+                                                        {matricula.usuario?.email || 'N/A'}
+                                                    </span>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span className="text-md mb-0 fw-normal text-secondary-light">
-                                                    {matricula.escola?.nome || 'N/A'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className="text-md mb-0 fw-normal text-secondary-light">
-                                                    {formatCurrency(matricula.cp_mt_valor_curso || 0)}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className="text-md mb-0 fw-normal text-secondary-light">
-                                                    {getTipoCobrancaLabel(matricula.cp_mt_tipo_cobranca)}
-                                                    {matricula.cp_mt_tipo_cobranca === 'parcelado' && matricula.cp_mt_numero_parcelas && (
-                                                        <div className="text-sm text-neutral-600">
-                                                            {matricula.cp_mt_numero_parcelas}x de {formatCurrency(matricula.cp_mt_valor_parcela || 0)}
-                                                        </div>
-                                                    )}
-                                                    {matricula.cp_mt_tipo_cobranca === 'mensalidade' && matricula.cp_mt_valor_mensalidade && (
-                                                        <div className="text-sm text-neutral-600">
-                                                            Mensalidade: {formatCurrency(matricula.cp_mt_valor_mensalidade)}
-                                                        </div>
-                                                    )}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {getStatusBadge(matricula.cp_mt_status)}
-                                            </td>
-                                            <td>
-                                                <span className="text-md mb-0 fw-normal text-secondary-light">
-                                                    {matricula.cp_mt_nivel_idioma || 'N/A'}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span className="text-md mb-0 fw-normal text-secondary-light">
-                                                    {formatDate(matricula.created_at)}
-                                                </span>
-                                            </td>
-                                            <td className="text-center">
-                                                <div className="d-flex align-items-center gap-10 justify-content-center">
-                                                    <button
-                                                        type="button"
-                                                        className="bg-info-focus bg-hover-info-200 text-info-600 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"
-                                                        title="Ver detalhes"
-                                                    >
-                                                        <Icon icon="majesticons:eye-line" className="menu-icon" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="bg-success-focus text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"
-                                                        title="Editar"
-                                                    >
-                                                        <Icon icon="lucide:edit" className="menu-icon" />
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="remove-item-btn bg-danger-focus bg-hover-danger-200 text-danger-600 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"
-                                                        title="Excluir"
-                                                    >
-                                                        <Icon
-                                                            icon="fluent:delete-24-regular"
-                                                            className="menu-icon"
-                                                        />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="9" className="text-center py-4">
-                                            Nenhuma matrícula encontrada
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span className="text-md mb-0 fw-medium text-secondary-light">
+                                                {matricula.escola?.nome || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="text-md mb-0 fw-medium text-secondary-light">
+                                                {formatCurrency(matricula.valorCurso)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`py-4 px-16 radius-4 text-sm fw-medium ${
+                                                matricula.tipoCobranca === 'parcelado' 
+                                                    ? 'text-info-600 bg-info-100' 
+                                                    : 'text-success-600 bg-success-100'
+                                            }`}>
+                                                {matricula.tipoCobranca === 'parcelado' ? 'Parcelado' : 'À Vista'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className={`py-4 px-16 radius-4 text-sm fw-medium ${
+                                                matricula.status === 'ativo' 
+                                                    ? 'text-success-600 bg-success-100' 
+                                                    : 'text-danger-600 bg-danger-100'
+                                            }`}>
+                                                {matricula.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="text-md mb-0 fw-medium text-secondary-light">
+                                                {formatDate(matricula.createdAt)}
+                                            </span>
+                                        </td>
+                                        <td className="text-center">
+                                            <div className="d-flex align-items-center gap-10 justify-content-center">
+                                                <a 
+                                                    href={`/cadastro-matricula?edit=${matricula.id}`}
+                                                    className="bg-success-100 text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"
+                                                >
+                                                    <i className="ri-edit-line"></i>
+                                                </a>
+                                                <button
+                                                    onClick={() => handleDelete(matricula.id)}
+                                                    className="bg-danger-100 text-danger-600 bg-hover-danger-200 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle border-0"
+                                                >
+                                                    <i className="ri-delete-bin-line"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24">
-                        <span>Mostrando {filteredMatriculas.length} de {matriculas.length} entradas</span>
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-24">
+                    <span>Mostrando 1 a {matriculas.length} de {matriculas.length} registros</span>
+                    <nav aria-label="Page navigation example">
                         <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
                             <li className="page-item">
-                                <a
-                                    className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px text-md"
-                                    href="#"
-                                >
-                                    <Icon icon="ep:d-arrow-left" className="" />
+                                <a className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px text-md" href="#">
+                                    <i className="ri-arrow-left-s-line"></i>
                                 </a>
                             </li>
                             <li className="page-item">
-                                <a
-                                    className="page-link text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px text-md bg-primary-600 text-white"
-                                    href="#"
-                                >
-                                    1
-                                </a>
+                                <a className="page-link text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px text-md bg-primary-600 text-white" href="#">1</a>
                             </li>
                             <li className="page-item">
-                                <a
-                                    className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px text-md"
-                                    href="#"
-                                >
-                                    2
-                                </a>
-                            </li>
-                            <li className="page-item">
-                                <a
-                                    className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px text-md"
-                                    href="#"
-                                >
-                                    <Icon icon="ep:d-arrow-right" className="" />
+                                <a className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px" href="#">
+                                    <i className="ri-arrow-right-s-line"></i>
                                 </a>
                             </li>
                         </ul>
-                    </div>
+                    </nav>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
