@@ -64,7 +64,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
     const fetchUsuarios = async () => {
         try {
             const response = await axios.get(`${API_BASE_URL_NEW}/api/users`);
-            const diretores = response.data.filter(user => user.cp_tipo_user === 2);
+            const diretores = response.data.filter(user => user.tipoUser === 2);
             setUsuarios(diretores);
         } catch (error) {
             console.error("Erro ao buscar usuários:", error);
@@ -178,14 +178,15 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
     const FormContent = () => (
         <form onSubmit={handleSubmit}>
             <Row>
-                <Col md={12}>
-                    <div className="card">
+                {/* Coluna da Esquerda - Informações da Escola e Detalhes */}
+                <Col md={6}>
+                    <div className="card mb-3">
                         <div className="card-header">
                             <h6 className="card-title mb-0">Informações da Escola</h6>
                         </div>
                         <div className="card-body">
                             <Row className="gy-3">
-                                <Col md={6}>
+                                <Col md={12}>
                                     <label htmlFor="nome">Nome da Escola<span className="required">*</span>:</label>
                                     <input
                                         type="text"
@@ -198,7 +199,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         required
                                     />
                                 </Col>
-                                <Col md={6}>
+                                <Col md={12}>
                                     <label htmlFor="dataCadastro">Data de Cadastro<span className="required">*</span>:</label>
                                     <input
                                         type="date"
@@ -231,16 +232,39 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                             </Row>
                         </div>
                     </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <h6 className="card-title mb-0">Detalhes Adicionais</h6>
+                        </div>
+                        <div className="card-body">
+                            <Row className="gy-3">
+                                <Col md={12}>
+                                    <label htmlFor="descricao">Descrição:</label>
+                                    <textarea
+                                        id="descricao"
+                                        name="descricao"
+                                        value={escolaData.descricao}
+                                        onChange={handleChange}
+                                        className="form-control"
+                                        placeholder="Descrição da escola"
+                                        rows="6"
+                                    />
+                                </Col>
+                            </Row>
+                        </div>
+                    </div>
                 </Col>
 
-                <Col md={12} className="mt-4">
+                {/* Coluna da Direita - Endereço */}
+                <Col md={6}>
                     <div className="card">
                         <div className="card-header">
                             <h6 className="card-title mb-0">Endereço</h6>
                         </div>
                         <div className="card-body">
                             <Row className="gy-3">
-                                <Col md={6}>
+                                <Col md={12}>
                                     <label htmlFor="cidade">Cidade<span className="required">*</span>:</label>
                                     <input
                                         type="text"
@@ -253,7 +277,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         required
                                     />
                                 </Col>
-                                <Col md={6}>
+                                <Col md={12}>
                                     <label htmlFor="bairro">Bairro<span className="required">*</span>:</label>
                                     <input
                                         type="text"
@@ -266,7 +290,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         required
                                     />
                                 </Col>
-                                <Col md={6}>
+                                <Col md={12}>
                                     <label htmlFor="estado">Estado<span className="required">*</span>:</label>
                                     <select
                                         id="estado"
@@ -284,7 +308,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         ))}
                                     </select>
                                 </Col>
-                                <Col md={6}>
+                                <Col md={12}>
                                     <label htmlFor="rua">Rua<span className="required">*</span>:</label>
                                     <input
                                         type="text"
@@ -297,7 +321,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         required
                                     />
                                 </Col>
-                                <Col md={6}>
+                                <Col md={12}>
                                     <label htmlFor="numero">Número<span className="required">*</span>:</label>
                                     <input
                                         type="text"
@@ -308,30 +332,6 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                                         className="form-control"
                                         placeholder="Nº"
                                         required
-                                    />
-                                </Col>
-                            </Row>
-                        </div>
-                    </div>
-                </Col>
-
-                <Col md={12} className="mt-4">
-                    <div className="card">
-                        <div className="card-header">
-                            <h6 className="card-title mb-0">Detalhes Adicionais</h6>
-                        </div>
-                        <div className="card-body">
-                            <Row className="gy-3">
-                                <Col md={12}>
-                                    <label htmlFor="descricao">Descrição:</label>
-                                    <textarea
-                                        id="descricao"
-                                        name="descricao"
-                                        value={escolaData.descricao}
-                                        onChange={handleChange}
-                                        className="form-control"
-                                        placeholder="Descrição da escola"
-                                        rows="4"
                                     />
                                 </Col>
                             </Row>

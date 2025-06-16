@@ -82,7 +82,7 @@ const CadastroUsuarioModal = ({ userId }) => {
                 if (userType && userType > 1) {
                     const userSchoolId = parseInt(localStorage.getItem('escolaId'));
                     if (userSchoolId) {
-                        escolasFiltradas = response.data.filter(escola => escola.cp_ec_id === userSchoolId);
+                        escolasFiltradas = response.data.filter(escola => escola.id === userSchoolId);
                     }
                 }
 
@@ -310,7 +310,6 @@ const CadastroUsuarioModal = ({ userId }) => {
                                             id="cp_escola_id"
                                             name="cp_escola_id"
                                             value={userData.cp_escola_id}
-                                            // value={userData.cp_escola_id || localStorage.getItem("schoolId")}
                                             onChange={handleChange}
                                             className="form-control"
                                             required
@@ -318,8 +317,8 @@ const CadastroUsuarioModal = ({ userId }) => {
                                             <option value="">Selecione a escola</option>
                                             {escolas.length > 0 ? (
                                                 escolas.map((escola) => (
-                                                    <option key={escola.cp_ec_id} value={escola.cp_ec_id}>
-                                                        {escola.cp_ec_nome}
+                                                    <option key={escola.id} value={escola.id}>
+                                                        {escola.nome}
                                                     </option>
                                                 ))
                                             ) : (
