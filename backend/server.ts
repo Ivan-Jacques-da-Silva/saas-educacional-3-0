@@ -299,7 +299,9 @@ app.get('/api/users/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    res.json(user);
+    // Remove a senha do retorno
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
   } catch (error) {
     logError(`GET /api/users/${req.params.id}`, error, req);
     console.error('Erro ao buscar usuário:', error);
@@ -949,6 +951,146 @@ app.delete('/api/cursos/:id', async (req: Request, res: Response) => {
     logError(`DELETE /api/cursos/${req.params.id}`, error, req);
     console.error('Erro ao excluir curso:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para buscar usuário por ID
+app.get('/users/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        escola: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Remove a senha do retorno
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error) {
+    console.error('Erro ao buscar usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para alterar senha
+app.put('/change-password/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias' });
+    }
+
+    // Buscar usuário atual
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Verificar senha atual
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: 'Senha atual incorreta' });
+    }
+
+    // Criptografar nova senha
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Atualizar senha
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword }
+    });
+
+    res.json({ message: 'Senha alterada com sucesso' });
+  } catch (error) {
+    console.error('Erro ao alterar senha:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Rota para editar usuário
+app.put('/edit-user/:id', upload.single('cp_foto_perfil'), async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const userData = req.body;
+
+    // Verificar se o usuário existe
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    // Preparar dados para atualização
+    const updateData = {
+      nome: userData.cp_nome,
+      email: userData.cp_email,
+      login: userData.cp_login,
+      rg: userData.cp_rg || null,
+      cpf: userData.cp_cpf,
+      dataNascimento: userData.cp_datanascimento,
+      estadoCivil: userData.cp_estadocivil || null,
+      cnpj: userData.cp_cnpj || null,
+      ie: userData.cp_ie || null,
+      whatsapp: userData.cp_whatsapp || null,
+      telefone: userData.cp_telefone || null,
+      empresaAtuacao: userData.cp_empresaatuacao || null,
+      profissao: userData.cp_profissao || null,
+      endCidadeEstado: userData.cp_end_cidade_estado || null,
+      endRua: userData.cp_end_rua || null,
+      endNum: userData.cp_end_num || null,
+      endCep: userData.cp_end_cep || null,
+      descricao: userData.cp_descricao || null,
+      escolaId: userData.cp_escola_id ? parseInt(userData.cp_escola_id) : null,
+    };
+
+    // Se uma nova foto foi enviada, adicione ao updateData
+    if (req.file) {
+      updateData.fotoPerfil = req.file.filename;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData
+    });
+
+    // Remover senha do retorno
+    const { password, ...userWithoutPassword } = updatedUser;
+
+    res.json({ message: 'Usuário atualizado com sucesso', user: userWithoutPassword });
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Servir arquivos estáticos (uploads)
+app.use('/uploads', express.static('uploads'));
+
+// Rota específica para imagens de perfil
+app.get('/uploads/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filepath = path.join(__dirname, 'uploads', filename);
+
+  // Verificar se o arquivo existe
+  if (fs.existsSync(filepath)) {
+    res.sendFile(filepath);
+  } else {
+    // Enviar imagem padrão se não encontrar
+    res.status(404).json({ error: 'Imagem não encontrada' });
   }
 });
 

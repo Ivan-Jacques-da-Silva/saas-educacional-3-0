@@ -1,183 +1,208 @@
-import { Icon } from '@iconify/react/dist/iconify.js';
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from "react";
+import { Icon } from "@iconify/react";
+import { API_BASE_URL_NEW } from './config';
+import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import InputMask from "react-input-mask";
 
 const ViewProfileLayer = () => {
-    const [imagePreview, setImagePreview] = useState('assets/images/user-grid/user-grid-img13.png');
-    const [passwordVisible, setPasswordVisible] = useState(false);
-    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+    const [userData, setUserData] = useState({
+        cp_nome: "",
+        cp_email: "",
+        cp_login: "",
+        cp_rg: "",
+        cp_cpf: "",
+        cp_datanascimento: "",
+        cp_estadocivil: "",
+        cp_cnpj: "",
+        cp_ie: "",
+        cp_whatsapp: "",
+        cp_telefone: "",
+        cp_empresaatuacao: "",
+        cp_profissao: "",
+        cp_end_cidade_estado: "",
+        cp_end_rua: "",
+        cp_end_num: "",
+        cp_end_cep: "",
+        cp_descricao: "",
+        cp_foto_perfil: ""
+    });
 
-    // Toggle function for password field
-    const togglePasswordVisibility = () => {
-        setPasswordVisible(!passwordVisible);
-    };
+    const [previewImage, setPreviewImage] = useState("");
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
-    // Toggle function for confirm password field
-    const toggleConfirmPasswordVisibility = () => {
-        setConfirmPasswordVisible(!confirmPasswordVisible);
-    };
+    useEffect(() => {
+        fetchUserProfile();
+    }, []);
 
-    const readURL = (input) => {
-        if (input.target.files && input.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setImagePreview(e.target.result);
-            };
-            reader.readAsDataURL(input.target.files[0]);
+    const fetchUserProfile = async () => {
+        try {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                toast.error("Usuário não encontrado. Faça login novamente.");
+                return;
+            }
+
+            const response = await axios.get(`${API_BASE_URL_NEW}/users/${userId}`);
+            setUserData(response.data);
+            
+            // Definir imagem de preview se existir
+            if (response.data.cp_foto_perfil) {
+                setPreviewImage(`${API_BASE_URL_NEW}/uploads/${response.data.cp_foto_perfil}`);
+            }
+        } catch (error) {
+            console.error("Erro ao carregar perfil:", error);
+            toast.error("Erro ao carregar dados do perfil.");
         }
     };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setPreviewImage(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setUserData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleProfileUpdate = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const userId = localStorage.getItem('userId');
+            const formData = new FormData();
+
+            // Adicionar arquivo de imagem se selecionado
+            if (selectedFile) {
+                formData.append("cp_foto_perfil", selectedFile);
+            }
+
+            // Adicionar outros dados do usuário
+            Object.keys(userData).forEach(key => {
+                if (key !== "cp_foto_perfil") {
+                    formData.append(key, userData[key]);
+                }
+            });
+
+            const response = await axios.put(`${API_BASE_URL_NEW}/edit-user/${userId}`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+
+            if (response.status === 200) {
+                toast.success("Perfil atualizado com sucesso!");
+                // Atualizar dados no localStorage se necessário
+                localStorage.setItem('userName', userData.cp_nome);
+                fetchUserProfile(); // Recarregar dados
+            }
+        } catch (error) {
+            console.error("Erro ao atualizar perfil:", error);
+            toast.error("Erro ao atualizar perfil. Tente novamente.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+
+        if (newPassword !== confirmPassword) {
+            toast.error("As senhas não coincidem.");
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            toast.error("A nova senha deve ter pelo menos 6 caracteres.");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const userId = localStorage.getItem('userId');
+            const response = await axios.put(`${API_BASE_URL_NEW}/change-password/${userId}`, {
+                currentPassword,
+                newPassword
+            });
+
+            if (response.status === 200) {
+                toast.success("Senha alterada com sucesso!");
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+            }
+        } catch (error) {
+            console.error("Erro ao alterar senha:", error);
+            if (error.response?.status === 400) {
+                toast.error("Senha atual incorreta.");
+            } else {
+                toast.error("Erro ao alterar senha. Tente novamente.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div className="row gy-4">
-            <div className="col-lg-4">
-                <div className="user-grid-card position-relative border radius-16 overflow-hidden bg-base h-100">
-                    <img
-                        src="assets/images/user-grid/user-grid-bg1.png"
-                        alt=""
-                        className="w-100 object-fit-cover"
-                    />
-                    <div className="pb-24 ms-16 mb-24 me-16  mt--100">
-                        <div className="text-center border border-top-0 border-start-0 border-end-0">
-                            <img
-                                src="assets/images/user-grid/user-grid-img14.png"
-                                alt=""
-                                className="border br-white border-width-2-px w-200-px h-200-px rounded-circle object-fit-cover"
-                            />
-                            <h6 className="mb-0 mt-16">Jacob Jones</h6>
-                            <span className="text-secondary-light mb-16">ifrandom@gmail.com</span>
-                        </div>
-                        <div className="mt-24">
-                            <h6 className="text-xl mb-16">Personal Info</h6>
-                            <ul>
-                                <li className="d-flex align-items-center gap-1 mb-12">
-                                    <span className="w-30 text-md fw-semibold text-primary-light">
-                                        Full Name
-                                    </span>
-                                    <span className="w-70 text-secondary-light fw-medium">
-                                        : Will Jonto
-                                    </span>
-                                </li>
-                                <li className="d-flex align-items-center gap-1 mb-12">
-                                    <span className="w-30 text-md fw-semibold text-primary-light">
-                                        {" "}
-                                        Email
-                                    </span>
-                                    <span className="w-70 text-secondary-light fw-medium">
-                                        : willjontoax@gmail.com
-                                    </span>
-                                </li>
-                                <li className="d-flex align-items-center gap-1 mb-12">
-                                    <span className="w-30 text-md fw-semibold text-primary-light">
-                                        {" "}
-                                        Phone Number
-                                    </span>
-                                    <span className="w-70 text-secondary-light fw-medium">
-                                        : (1) 2536 2561 2365
-                                    </span>
-                                </li>
-                                <li className="d-flex align-items-center gap-1 mb-12">
-                                    <span className="w-30 text-md fw-semibold text-primary-light">
-                                        {" "}
-                                        Department
-                                    </span>
-                                    <span className="w-70 text-secondary-light fw-medium">
-                                        : Design
-                                    </span>
-                                </li>
-                                <li className="d-flex align-items-center gap-1 mb-12">
-                                    <span className="w-30 text-md fw-semibold text-primary-light">
-                                        {" "}
-                                        Designation
-                                    </span>
-                                    <span className="w-70 text-secondary-light fw-medium">
-                                        : UI UX Designer
-                                    </span>
-                                </li>
-                                <li className="d-flex align-items-center gap-1 mb-12">
-                                    <span className="w-30 text-md fw-semibold text-primary-light">
-                                        {" "}
-                                        Languages
-                                    </span>
-                                    <span className="w-70 text-secondary-light fw-medium">
-                                        : English
-                                    </span>
-                                </li>
-                                <li className="d-flex align-items-center gap-1">
-                                    <span className="w-30 text-md fw-semibold text-primary-light">
-                                        {" "}
-                                        Bio
-                                    </span>
-                                    <span className="w-70 text-secondary-light fw-medium">
-                                        : Lorem Ipsum&nbsp;is simply dummy text of the printing and
-                                        typesetting industry.
-                                    </span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div className="col-lg-8">
-                <div className="card h-100">
-                    <div className="card-body p-24">
-                        <ul
-                            className="nav border-gradient-tab nav-pills mb-20 d-inline-flex"
-                            id="pills-tab"
-                            role="tablist"
-                        >
-                            <li className="nav-item" role="presentation">
-                                <button
-                                    className="nav-link d-flex align-items-center px-24 active"
-                                    id="pills-edit-profile-tab"
-                                    data-bs-toggle="pill"
-                                    data-bs-target="#pills-edit-profile"
-                                    type="button"
-                                    role="tab"
-                                    aria-controls="pills-edit-profile"
-                                    aria-selected="true"
-                                >
-                                    Edit Profile
-                                </button>
-                            </li>
-                            <li className="nav-item" role="presentation">
-                                <button
-                                    className="nav-link d-flex align-items-center px-24"
-                                    id="pills-change-passwork-tab"
-                                    data-bs-toggle="pill"
-                                    data-bs-target="#pills-change-passwork"
-                                    type="button"
-                                    role="tab"
-                                    aria-controls="pills-change-passwork"
-                                    aria-selected="false"
-                                    tabIndex={-1}
-                                >
-                                    Change Password
-                                </button>
-                            </li>
-                            <li className="nav-item" role="presentation">
-                                <button
-                                    className="nav-link d-flex align-items-center px-24"
-                                    id="pills-notification-tab"
-                                    data-bs-toggle="pill"
-                                    data-bs-target="#pills-notification"
-                                    type="button"
-                                    role="tab"
-                                    aria-controls="pills-notification"
-                                    aria-selected="false"
-                                    tabIndex={-1}
-                                >
-                                    Notification Settings
-                                </button>
-                            </li>
-                        </ul>
-                        <div className="tab-content" id="pills-tabContent">
-                            <div
-                                className="tab-pane fade show active"
-                                id="pills-edit-profile"
-                                role="tabpanel"
-                                aria-labelledby="pills-edit-profile-tab"
-                                tabIndex={0}
+        <>
+            <ToastContainer />
+            <div className="card h-100 p-0 radius-12">
+                <div className="card-body p-24">
+                    <ul className="nav border-gradient-tab nav-pills mb-20 d-inline-flex" id="pills-tab" role="tablist">
+                        <li className="nav-item" role="presentation">
+                            <button
+                                className="nav-link d-flex align-items-center px-24 active"
+                                id="pills-edit-profile-tab"
+                                data-bs-toggle="pill"
+                                data-bs-target="#pills-edit-profile"
+                                type="button"
+                                role="tab"
+                                aria-controls="pills-edit-profile"
+                                aria-selected="true"
                             >
-                                <h6 className="text-md text-primary-light mb-16">Profile Image</h6>
-                                {/* Upload Image Start */}
+                                Editar Perfil
+                            </button>
+                        </li>
+                        <li className="nav-item" role="presentation">
+                            <button
+                                className="nav-link d-flex align-items-center px-24"
+                                id="pills-change-password-tab"
+                                data-bs-toggle="pill"
+                                data-bs-target="#pills-change-password"
+                                type="button"
+                                role="tab"
+                                aria-controls="pills-change-password"
+                                aria-selected="false"
+                            >
+                                Alterar Senha
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div className="tab-content" id="pills-tabContent">
+                        {/* Tab Editar Perfil */}
+                        <div className="tab-pane fade show active" id="pills-edit-profile" role="tabpanel" aria-labelledby="pills-edit-profile-tab" tabIndex={0}>
+                            <form onSubmit={handleProfileUpdate}>
+                                {/* Upload de Imagem */}
                                 <div className="mb-24 mt-16">
                                     <div className="avatar-upload">
                                         <div className="avatar-edit position-absolute bottom-0 end-0 me-24 mt-16 z-1 cursor-pointer">
@@ -186,7 +211,7 @@ const ViewProfileLayer = () => {
                                                 id="imageUpload"
                                                 accept=".png, .jpg, .jpeg"
                                                 hidden
-                                                onChange={readURL}
+                                                onChange={handleImageUpload}
                                             />
                                             <label
                                                 htmlFor="imageUpload"
@@ -199,309 +224,270 @@ const ViewProfileLayer = () => {
                                             <div
                                                 id="imagePreview"
                                                 style={{
-                                                    backgroundImage: `url(${imagePreview})`,
-                                                    backgroundSize: 'cover',
-                                                    backgroundPosition: 'center'
+                                                    width: "120px",
+                                                    height: "120px",
+                                                    borderRadius: "50%",
+                                                    backgroundImage: previewImage ? `url(${previewImage})` : 'url(/assets/images/user.png)',
+                                                    backgroundSize: "cover",
+                                                    backgroundPosition: "center",
+                                                    backgroundRepeat: "no-repeat"
                                                 }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="row">
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_nome" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Nome Completo <span className="text-danger-600">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control radius-8"
+                                                id="cp_nome"
+                                                name="cp_nome"
+                                                value={userData.cp_nome}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite seu nome completo"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_email" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Email <span className="text-danger-600">*</span>
+                                            </label>
+                                            <input
+                                                type="email"
+                                                className="form-control radius-8"
+                                                id="cp_email"
+                                                name="cp_email"
+                                                value={userData.cp_email}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite seu email"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_login" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Login
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control radius-8"
+                                                id="cp_login"
+                                                name="cp_login"
+                                                value={userData.cp_login}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite seu login"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_cpf" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                CPF
+                                            </label>
+                                            <InputMask
+                                                mask="999.999.999-99"
+                                                type="text"
+                                                className="form-control radius-8"
+                                                id="cp_cpf"
+                                                name="cp_cpf"
+                                                value={userData.cp_cpf}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite seu CPF"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_whatsapp" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                WhatsApp
+                                            </label>
+                                            <InputMask
+                                                mask="(99) 99999-9999"
+                                                type="text"
+                                                className="form-control radius-8"
+                                                id="cp_whatsapp"
+                                                name="cp_whatsapp"
+                                                value={userData.cp_whatsapp}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite seu WhatsApp"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_telefone" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Telefone
+                                            </label>
+                                            <InputMask
+                                                mask="(99) 99999-9999"
+                                                type="text"
+                                                className="form-control radius-8"
+                                                id="cp_telefone"
+                                                name="cp_telefone"
+                                                value={userData.cp_telefone}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite seu telefone"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_end_cidade_estado" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Cidade/Estado
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control radius-8"
+                                                id="cp_end_cidade_estado"
+                                                name="cp_end_cidade_estado"
+                                                value={userData.cp_end_cidade_estado}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite cidade e estado"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_end_rua" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Endereço
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="form-control radius-8"
+                                                id="cp_end_rua"
+                                                name="cp_end_rua"
+                                                value={userData.cp_end_rua}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite seu endereço"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-12">
+                                        <div className="mb-20">
+                                            <label htmlFor="cp_descricao" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Descrição
+                                            </label>
+                                            <textarea
+                                                className="form-control radius-8"
+                                                id="cp_descricao"
+                                                name="cp_descricao"
+                                                rows="4"
+                                                value={userData.cp_descricao}
+                                                onChange={handleInputChange}
+                                                placeholder="Digite uma descrição sobre você"
+                                            ></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="d-flex align-items-center justify-content-center gap-3">
+                                    <button
+                                        type="button"
+                                        className="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-40 py-11 radius-8"
+                                        onClick={() => fetchUserProfile()}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary border border-primary-600 text-md px-40 py-11 radius-8"
+                                        disabled={loading}
+                                    >
+                                        {loading ? "Salvando..." : "Salvar Alterações"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Tab Alterar Senha */}
+                        <div className="tab-pane fade" id="pills-change-password" role="tabpanel" aria-labelledby="pills-change-password-tab" tabIndex={0}>
+                            <form onSubmit={handlePasswordChange}>
+                                <div className="row">
+                                    <div className="col-sm-12">
+                                        <div className="mb-20">
+                                            <label htmlFor="currentPassword" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Senha Atual <span className="text-danger-600">*</span>
+                                            </label>
+                                            <input
+                                                type="password"
+                                                className="form-control radius-8"
+                                                id="currentPassword"
+                                                value={currentPassword}
+                                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                                placeholder="Digite sua senha atual"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="newPassword" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Nova Senha <span className="text-danger-600">*</span>
+                                            </label>
+                                            <input
+                                                type="password"
+                                                className="form-control radius-8"
+                                                id="newPassword"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                placeholder="Digite a nova senha"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="col-sm-6">
+                                        <div className="mb-20">
+                                            <label htmlFor="confirmPassword" className="form-label fw-semibold text-primary-light text-sm mb-8">
+                                                Confirmar Nova Senha <span className="text-danger-600">*</span>
+                                            </label>
+                                            <input
+                                                type="password"
+                                                className="form-control radius-8"
+                                                id="confirmPassword"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                placeholder="Confirme a nova senha"
+                                                required
                                             />
                                         </div>
                                     </div>
                                 </div>
-                                {/* Upload Image End */}
-                                <form action="#">
-                                    <div className="row">
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="name"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Full Name
-                                                    <span className="text-danger-600">*</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control radius-8"
-                                                    id="name"
-                                                    placeholder="Enter Full Name"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="email"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Email <span className="text-danger-600">*</span>
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    className="form-control radius-8"
-                                                    id="email"
-                                                    placeholder="Enter email address"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="number"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Phone
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    className="form-control radius-8"
-                                                    id="number"
-                                                    placeholder="Enter phone number"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="depart"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Department
-                                                    <span className="text-danger-600">*</span>{" "}
-                                                </label>
-                                                <select
-                                                    className="form-control radius-8 form-select"
-                                                    id="depart"
-                                                    defaultValue="Select Event Title"
-                                                >
-                                                    <option value="Select Event Title" disabled>
-                                                        Select Event Title
-                                                    </option>
-                                                    <option value="Enter Event Title">Enter Event Title</option>
-                                                    <option value="Enter Event Title One">Enter Event Title One</option>
-                                                    <option value="Enter Event Title Two">Enter Event Title Two</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="desig"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Designation
-                                                    <span className="text-danger-600">*</span>{" "}
-                                                </label>
-                                                <select
-                                                    className="form-control radius-8 form-select"
-                                                    id="desig"
-                                                    defaultValue="Select Designation Title"
-                                                >
-                                                    <option value="Select Designation Title" disabled>
-                                                        Select Designation Title
-                                                    </option>
-                                                    <option value="Enter Designation Title">Enter Designation Title</option>
-                                                    <option value="Enter Designation Title One">Enter Designation Title One</option>
-                                                    <option value="Enter Designation Title Two">Enter Designation Title Two</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-6">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="Language"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Language
-                                                    <span className="text-danger-600">*</span>{" "}
-                                                </label>
-                                                <select
-                                                    className="form-control radius-8 form-select"
-                                                    id="Language"
-                                                    defaultValue="Select Language"
-                                                >
-                                                    <option value="Select Language" disabled>
-                                                        Select Language
-                                                    </option>
-                                                    <option value="English">English</option>
-                                                    <option value="Bangla">Bangla</option>
-                                                    <option value="Hindi">Hindi</option>
-                                                    <option value="Arabic">Arabic</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div className="col-sm-12">
-                                            <div className="mb-20">
-                                                <label
-                                                    htmlFor="desc"
-                                                    className="form-label fw-semibold text-primary-light text-sm mb-8"
-                                                >
-                                                    Description
-                                                </label>
-                                                <textarea
-                                                    name="#0"
-                                                    className="form-control radius-8"
-                                                    id="desc"
-                                                    placeholder="Write description..."
-                                                    defaultValue={""}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="d-flex align-items-center justify-content-center gap-3">
-                                        <button
-                                            type="button"
-                                            className="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-56 py-11 radius-8"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn-primary border border-primary-600 text-md px-56 py-12 radius-8"
-                                        >
-                                            Save
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                            <div className="tab-pane fade" id="pills-change-passwork" role="tabpanel" aria-labelledby="pills-change-passwork-tab" tabIndex="0">
-                                <div className="mb-20">
-                                    <label htmlFor="your-password" className="form-label fw-semibold text-primary-light text-sm mb-8">
-                                        New Password <span className="text-danger-600">*</span>
-                                    </label>
-                                    <div className="position-relative">
-                                        <input
-                                            type={passwordVisible ? "text" : "password"}
-                                            className="form-control radius-8"
-                                            id="your-password"
-                                            placeholder="Enter New Password*"
-                                        />
-                                        <span
-                                            className={`toggle-password ${passwordVisible ? "ri-eye-off-line" : "ri-eye-line"} cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light`}
-                                            onClick={togglePasswordVisibility}
-                                        ></span>
-                                    </div>
-                                </div>
 
-                                <div className="mb-20">
-                                    <label htmlFor="confirm-password" className="form-label fw-semibold text-primary-light text-sm mb-8">
-                                        Confirm Password <span className="text-danger-600">*</span>
-                                    </label>
-                                    <div className="position-relative">
-                                        <input
-                                            type={confirmPasswordVisible ? "text" : "password"}
-                                            className="form-control radius-8"
-                                            id="confirm-password"
-                                            placeholder="Confirm Password*"
-                                        />
-                                        <span
-                                            className={`toggle-password ${confirmPasswordVisible ? "ri-eye-off-line" : "ri-eye-line"} cursor-pointer position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light`}
-                                            onClick={toggleConfirmPasswordVisibility}
-                                        ></span>
-                                    </div>
+                                <div className="d-flex align-items-center justify-content-center gap-3">
+                                    <button
+                                        type="button"
+                                        className="border border-danger-600 bg-hover-danger-200 text-danger-600 text-md px-40 py-11 radius-8"
+                                        onClick={() => {
+                                            setCurrentPassword("");
+                                            setNewPassword("");
+                                            setConfirmPassword("");
+                                        }}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary border border-primary-600 text-md px-40 py-11 radius-8"
+                                        disabled={loading}
+                                    >
+                                        {loading ? "Alterando..." : "Alterar Senha"}
+                                    </button>
                                 </div>
-                            </div>
-                            <div
-                                className="tab-pane fade"
-                                id="pills-notification"
-                                role="tabpanel"
-                                aria-labelledby="pills-notification-tab"
-                                tabIndex={0}
-                            >
-                                <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="companzNew"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
-                                    <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Company News
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="companzNew"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="pushNotifcation"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
-                                    <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Push Notification
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="pushNotifcation"
-                                            defaultChecked=""
-                                        />
-                                    </div>
-                                </div>
-                                <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="weeklyLetters"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
-                                    <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Weekly News Letters
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="weeklyLetters"
-                                            defaultChecked=""
-                                        />
-                                    </div>
-                                </div>
-                                <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="meetUp"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
-                                    <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Meetups Near you
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="meetUp"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="form-switch switch-primary py-12 px-16 border radius-8 position-relative mb-16">
-                                    <label
-                                        htmlFor="orderNotification"
-                                        className="position-absolute w-100 h-100 start-0 top-0"
-                                    />
-                                    <div className="d-flex align-items-center gap-3 justify-content-between">
-                                        <span className="form-check-label line-height-1 fw-medium text-secondary-light">
-                                            Orders Notifications
-                                        </span>
-                                        <input
-                                            className="form-check-input"
-                                            type="checkbox"
-                                            role="switch"
-                                            id="orderNotification"
-                                            defaultChecked=""
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
+        </>
     );
 };
 
