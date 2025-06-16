@@ -21,7 +21,7 @@ const MatriculasLayout = () => {
 
     const fetchMatriculas = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL_NEW}/api/matriculas`);
+            const response = await axios.get(`${API_BASE_URL_NEW}/matriculas`);
             let matriculasData = response.data;
 
             // Filtrar por escola se usuário for diretor ou abaixo (tipo 2 a 5)
@@ -42,7 +42,7 @@ const MatriculasLayout = () => {
 
     const fetchUsuarios = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL_NEW}/api/usuarios-matricula`);
+            const response = await axios.get(`${API_BASE_URL_NEW}/usuarios-matricula`);
             let usuariosData = response.data;
 
             // Filtrar por escola se usuário for diretor ou abaixo (tipo 2 a 5)
@@ -60,7 +60,7 @@ const MatriculasLayout = () => {
 
     const fetchEscolas = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL_NEW}/api/escolas`);
+            const response = await axios.get(`${API_BASE_URL_NEW}/escolas`);
             let escolasData = response.data;
 
             // Filtrar por escola se usuário for diretor ou abaixo (tipo 2 a 5)
@@ -82,7 +82,7 @@ const MatriculasLayout = () => {
         }
 
         try {
-            await axios.delete(`${API_BASE_URL_NEW}/api/matriculas/${id}`);
+            await axios.delete(`${API_BASE_URL_NEW}/matriculas/${id}`);
             fetchMatriculas();
             alert('Matrícula excluída com sucesso!');
         } catch (error) {

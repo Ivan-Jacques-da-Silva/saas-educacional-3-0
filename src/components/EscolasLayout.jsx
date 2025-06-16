@@ -26,7 +26,7 @@ const EscolasLayout = () => {
     const fetchEscolas = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL_NEW}/api/escolas`);
+            const response = await axios.get(`${API_BASE_URL_NEW}/escolas`);
             setEscolas(response.data);
         } catch (error) {
             console.error("Erro ao buscar escolas:", error);
@@ -43,7 +43,7 @@ const EscolasLayout = () => {
 
     const handleConfirmDelete = async () => {
         try {
-            await axios.delete(`${API_BASE_URL_NEW}/api/escolas/${idEscolaParaExcluir}`);
+            await axios.delete(`${API_BASE_URL_NEW}/escolas/${idEscolaParaExcluir}`);
             toast.success("Escola excluída com sucesso!");
             setMostrarModalExclusao(false);
             fetchEscolas();

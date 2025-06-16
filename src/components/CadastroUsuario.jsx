@@ -74,7 +74,7 @@ const CadastroUsuarioModal = ({ userId }) => {
     useEffect(() => {
         const fetchEscolas = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL_NEW}/api/escolas`);
+                const response = await axios.get(`${API_BASE_URL_NEW}/escolas`);
                 let escolasFiltradas = response.data;
 
                 // Se não for gestor (tipoUser 1), filtrar por escola do usuário
@@ -160,7 +160,7 @@ const CadastroUsuarioModal = ({ userId }) => {
         try {
             if (userId) {
                 // Modo de edição: Enviar como JSON, pois o backend espera JSON e não FormData
-                const response = await axios.put(`${API_BASE_URL_NEW}/api/edit-user/${userId}`, userData, {
+                const response = await axios.put(`${API_BASE_URL_NEW}/edit-user/${userId}`, userData, {
                     headers: { "Content-Type": "application/json" }, // Alterado para JSON
                 });
 

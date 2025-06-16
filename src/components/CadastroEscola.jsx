@@ -63,7 +63,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
     // Buscar usuários com perfil de diretor (tipoUser = 2)
     const fetchUsuarios = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL_NEW}/api/users`);
+            const response = await axios.get(`${API_BASE_URL_NEW}/users`);
             const diretores = response.data.filter(user => user.tipoUser === 2);
             setUsuarios(diretores);
         } catch (error) {
@@ -76,7 +76,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
         fetchUsuarios();
 
         if (escolaId) {
-            axios.get(`${API_BASE_URL_NEW}/api/escolas/${escolaId}`)
+            axios.get(`${API_BASE_URL_NEW}/escolas/${escolaId}`)
                 .then(response => {
                     const escola = response.data;
                     setEscolaData({
@@ -122,7 +122,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
         try {
             if (escolaId) {
                 // Modo de edição
-                const response = await axios.put(`${API_BASE_URL_NEW}/api/escolas/${escolaId}`, escolaData, {
+                const response = await axios.put(`${API_BASE_URL_NEW}/escolas/${escolaId}`, escolaData, {
                     headers: { "Content-Type": "application/json" },
                 });
 
@@ -135,7 +135,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                 }
             } else {
                 // Modo de cadastro
-                const response = await axios.post(`${API_BASE_URL_NEW}/api/escolas`, escolaData, {
+                const response = await axios.post(`${API_BASE_URL_NEW}/escolas`, escolaData, {
                     headers: { "Content-Type": "application/json" },
                 });
 
