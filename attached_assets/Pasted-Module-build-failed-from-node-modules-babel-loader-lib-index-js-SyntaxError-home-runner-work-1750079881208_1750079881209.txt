@@ -1,0 +1,99 @@
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /home/runner/workspace/src/pages/PaginaCadastroEscola.jsx: Identifier 'React' has already been declared. (18:7)
+
+[0m [90m 16 |[39m
+ [90m 17 |[39m [36mexport[39m [36mdefault[39m [33mPaginaCadastroEscola[39m[33m;[39m
+[31m[1m>[22m[39m[90m 18 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m    |[39m        [31m[1m^[22m[39m
+ [90m 19 |[39m [36mimport[39m [33mMasterLayout[39m [36mfrom[39m [32m"../masterLayout/MasterLayout"[39m[33m;[39m
+ [90m 20 |[39m [36mimport[39m [33mBreadcrumb[39m [36mfrom[39m [32m"../components/Breadcrumb"[39m[33m;[39m
+ [90m 21 |[39m [36mimport[39m [33mCadastroEscolaModal[39m [36mfrom[39m [32m"../components/CadastroEscola"[39m[33m;[39m[0m
+    at constructor (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:359:19)
+    at FlowParserMixin.raise (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:3266:19)
+    at FlowScopeHandler.checkRedeclarationInScope (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:1502:19)
+    at FlowScopeHandler.declareName (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:1468:12)
+    at FlowScopeHandler.declareName (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:1569:11)
+    at FlowParserMixin.declareNameFromIdentifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:7357:16)
+    at FlowParserMixin.checkIdentifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:7353:12)
+    at FlowParserMixin.checkLVal (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:7294:12)
+    at FlowParserMixin.finishImportSpecifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13748:10)
+    at FlowParserMixin.parseImportSpecifierLocal (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:5517:31)
+    at FlowParserMixin.maybeParseDefaultImportSpecifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13851:12)
+    at FlowParserMixin.parseImportSpecifiersAndAfter (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13722:29)
+    at FlowParserMixin.parseImport (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13718:17)
+    at FlowParserMixin.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12365:27)
+    at FlowParserMixin.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12257:17)
+    at FlowParserMixin.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:5054:24)
+    at FlowParserMixin.parseModuleItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12234:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12810:36)
+    at FlowParserMixin.parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12803:10)
+    at FlowParserMixin.parseProgram (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12131:10)
+    at FlowParserMixin.parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12121:25)
+    at FlowParserMixin.parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:5821:28)
+    at FlowParserMixin.parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13929:10)
+    at parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13963:38)
+    at parser (/home/runner/workspace/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next ()
+    at normalizeFile (/home/runner/workspace/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next ()
+    at run (/home/runner/workspace/node_modules/@babel/core/lib/transformation/index.js:22:50)
+    at run.next ()
+    at transform (/home/runner/workspace/node_modules/@babel/core/lib/transform.js:22:33)
+    at transform.next ()
+    at step (/home/runner/workspace/node_modules/gensync/index.js:261:32)
+    at /home/runner/workspace/node_modules/gensync/index.js:273:13
+    at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+SyntaxError: /home/runner/workspace/src/pages/PaginaCadastroEscola.jsx: Identifier 'React' has already been declared. (18:7)
+
+[0m [90m 16 |[39m
+[90m 17 |[39m [36mexport[39m [36mdefault[39m [33mPaginaCadastroEscola[39m[33m;[39m
+[31m[1m>[22m[39m[90m 18 |[39m [36mimport[39m [33mReact[39m [36mfrom[39m [32m"react"[39m[33m;[39m
+[90m |[39m [31m[1m^[22m[39m
+[90m 19 |[39m [36mimport[39m [33mMasterLayout[39m [36mfrom[39m [32m"../masterLayout/MasterLayout"[39m[33m;[39m
+[90m 20 |[39m [36mimport[39m [33mBreadcrumb[39m [36mfrom[39m [32m"../components/Breadcrumb"[39m[33m;[39m
+[90m 21 |[39m [36mimport[39m [33mCadastroEscolaModal[39m [36mfrom[39m [32m"../components/CadastroEscola"[39m[33m;[39m[0m
+at constructor (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:359:19)
+at FlowParserMixin.raise (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:3266:19)
+at FlowScopeHandler.checkRedeclarationInScope (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:1502:19)
+at FlowScopeHandler.declareName (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:1468:12)
+at FlowScopeHandler.declareName (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:1569:11)
+at FlowParserMixin.declareNameFromIdentifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:7357:16)
+at FlowParserMixin.checkIdentifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:7353:12)
+at FlowParserMixin.checkLVal (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:7294:12)
+at FlowParserMixin.finishImportSpecifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13748:10)
+at FlowParserMixin.parseImportSpecifierLocal (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:5517:31)
+at FlowParserMixin.maybeParseDefaultImportSpecifier (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13851:12)
+at FlowParserMixin.parseImportSpecifiersAndAfter (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13722:29)
+at FlowParserMixin.parseImport (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13718:17)
+at FlowParserMixin.parseStatementContent (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12365:27)
+at FlowParserMixin.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12257:17)
+at FlowParserMixin.parseStatementLike (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:5054:24)
+at FlowParserMixin.parseModuleItem (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12234:17)
+at FlowParserMixin.parseBlockOrModuleBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12810:36)
+at FlowParserMixin.parseBlockBody (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12803:10)
+at FlowParserMixin.parseProgram (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12131:10)
+at FlowParserMixin.parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:12121:25)
+at FlowParserMixin.parseTopLevel (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:5821:28)
+at FlowParserMixin.parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13929:10)
+at parse (/home/runner/workspace/node_modules/@babel/parser/lib/index.js:13963:38)
+at parser (/home/runner/workspace/node_modules/@babel/core/lib/parser/index.js:41:34)
+at parser.next (<anonymous>)
+at normalizeFile (/home/runner/workspace/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+at normalizeFile.next (<anonymous>)
+at run (/home/runner/workspace/node_modules/@babel/core/lib/transformation/index.js:22:50)
+at run.next (<anonymous>)
+at transform (/home/runner/workspace/node_modules/@babel/core/lib/transform.js:22:33)
+at transform.next (<anonymous>)
+at step (/home/runner/workspace/node_modules/gensync/index.js:261:32)
+at /home/runner/workspace/node_modules/gensync/index.js:273:13
+at async.call.result.err.err (/home/runner/workspace/node_modules/gensync/index.js:223:11)
+at ./src/pages/PaginaCadastroEscola.jsx (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:18859:7)
+at options.factory (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:136312:31)
+at __webpack_require__ (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:135712:32)
+at fn (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:135971:21)
+at ./src/App.js (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:19:85)
+at options.factory (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:136312:31)
+at __webpack_require__ (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:135712:32)
+at fn (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:135971:21)
+at ./src/index.js (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:16957:62)
+at options.factory (https://fffdbc97-a245-4b61-a497-acba06388362-00-1qdl5qey0wozi.janeway.replit.dev/static/js/bundle.js:136312:31)

@@ -1,0 +1,112 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int      @id @default(autoincrement()) @map("cp_id")
+  nome             String   @map("cp_nome")
+  email            String   @unique @map("cp_email")
+  login            String   @unique @map("cp_login")
+  password         String   @map("cp_password")
+  tipoUser         String   @map("cp_tipo_user")
+  rg               String?  @map("cp_rg")
+  cpf              String   @map("cp_cpf")
+  dataNascimento   String   @map("cp_datanascimento")
+  estadoCivil      String?  @map("cp_estadocivil")
+  cnpj             String?  @map("cp_cnpj")
+  ie               String?  @map("cp_ie")
+  whatsapp         String?  @map("cp_whatsapp")
+  telefone         String?  @map("cp_telefone")
+  empresaAtuacao   String?  @map("cp_empresaatuacao")
+  profissao        String?  @map("cp_profissao")
+  endCidadeEstado  String?  @map("cp_end_cidade_estado")
+  endRua           String?  @map("cp_end_rua")
+  endNum           String?  @map("cp_end_num")
+  endCep           String?  @map("cp_end_cep")
+  descricao        String?  @map("cp_descricao")
+  fotoPerfil       String?  @map("cp_foto_perfil")
+  escolaId         Int?     @map("cp_escola_id")
+  escola           Escola?  @relation(fields: [escolaId], references: [id])
+  escolasResponsavel Escola[] @relation("EscolaResponsavel")
+  matriculas       Matricula[]
+  cursosInstrutor  Curso[] @relation("CursoInstrutor")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Escola {
+  id           Int      @id @default(autoincrement()) @map("cp_ec_id")
+  nome         String   @unique @map("cp_ec_nome")
+  dataCadastro DateTime @default(now()) @map("cp_ec_data_cadastro")
+  responsavelId Int?    @map("cp_ec_responsavel_id")
+  responsavel  User?    @relation("EscolaResponsavel", fields: [responsavelId], references: [id])
+  cidade       String?  @map("cp_ec_cidade")
+  bairro       String?  @map("cp_ec_bairro")
+  estado       String?  @map("cp_ec_estado")
+  rua          String?  @map("cp_ec_rua")
+  numero       String?  @map("cp_ec_numero")
+  descricao    String?  @map("cp_ec_descricao")
+  users        User[]
+  matriculas   Matricula[]
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("escolas")
+}
+
+model Matricula {
+  id                   Int      @id @default(autoincrement()) @map("cp_mt_id")
+  usuarioId            Int      @map("cp_mt_usuario_id")
+  usuario              User     @relation(fields: [usuarioId], references: [id])
+  escolaId             Int?     @map("cp_mt_escola_id")
+  escola               Escola?  @relation(fields: [escolaId], references: [id])
+  valorCurso           Float    @map("cp_mt_valor_curso")
+  numeroParcelas       Int?     @map("cp_mt_numero_parcelas")
+  valorParcela         Float?   @map("cp_mt_valor_parcela")
+  valorMensalidade     Float?   @map("cp_mt_valor_mensalidade")
+  tipoCobranca         String   @default("parcelado") @map("cp_mt_tipo_cobranca") // 'parcelado' ou 'mensalidade'
+  primeiraDataPagamento DateTime? @map("cp_mt_primeira_data_pagamento")
+  status               String   @default("ativo") @map("cp_mt_status")
+  nivelIdioma          String?  @map("cp_mt_nivel_idioma")
+  horarioInicio        String?  @map("cp_mt_horario_inicio")
+  horarioFim           String?  @map("cp_mt_horario_fim")
+  escolaridade         String?  @map("cp_mt_escolaridade")
+  localNascimento      String?  @map("cp_mt_local_nascimento")
+  redeSocial           String?  @map("cp_mt_rede_social")
+  nomePai              String?  @map("cp_mt_nome_pai")
+  contatoPai           String?  @map("cp_mt_contato_pai")
+  nomeMae              String?  @map("cp_mt_nome_mae")
+  contatoMae           String?  @map("cp_mt_contato_mae")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("matriculas")
+}
+
+model Curso {
+  id               Int      @id @default(autoincrement()) @map("cp_cr_id")
+  titulo           String   @map("cp_cr_titulo")
+  descricao        String?  @map("cp_cr_descricao")
+  instrutorId      Int?     @map("cp_cr_instrutor_id")
+  instrutor        User?    @relation("CursoInstrutor", fields: [instrutorId], references: [id])
+  categoria        String?  @map("cp_cr_categoria")
+  nivel            String?  @map("cp_cr_nivel")
+  duracao          String?  @map("cp_cr_duracao")
+  preco            Float?   @map("cp_cr_preco")
+  status           String   @default("ativo") @map("cp_cr_status")
+  dataPublicacao   DateTime @default(now()) @map("cp_cr_data_publicacao")
+  tags             String?  @map("cp_cr_tags")
+  arquivo          String?  @map("cp_cr_arquivo")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("cursos")
+}
