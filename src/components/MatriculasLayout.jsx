@@ -1,14 +1,9 @@
-The code is modified to filter the list of enrollments based on the user's school if the user is a director or below.
-```
-
-```replit_final_file
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
-// import CadastroMatriculaModal from "./CadastroMatriculaModalTeste";
 import { API_BASE_URL } from "./config";
 
-const Usuarios = () => {
+const MatriculasLayout = () => {
     const [matriculas, setMatriculas] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [matriculaDataToEdit, setMatriculaDataToEdit] = useState(null);
@@ -45,23 +40,24 @@ const Usuarios = () => {
                 const schoolId = getUserSchoolId();
                 if (schoolId) {
                     filteredData = data.filter(matricula => 
-                        matricula.turma?.escolaId === parseInt(schoolId)
+                        matricula.escola?.id === parseInt(schoolId)
                     );
                 }
             }
 
             setMatriculas(filteredData);
 
+            // Buscar dados dos usuários
             const uniqueUserIds = [
-                ...new Set(filteredData.map((matricula) => matricula.cp_mt_usuario)),
+                ...new Set(filteredData.map((matricula) => matricula.usuarioId)),
             ];
             const usersData = {};
             for (const userId of uniqueUserIds) {
                 const responseUsuario = await fetch(
-                    `${API_BASE_URL}/matricula/${userId}`
+                    `${API_BASE_URL}/users/${userId}`
                 );
                 const usuarioData = await responseUsuario.json();
-                usersData[userId] = usuarioData.nomeUsuario;
+                usersData[userId] = usuarioData.nome;
             }
             setUsuarios(usersData);
         } catch (error) {
@@ -73,7 +69,7 @@ const Usuarios = () => {
 
     const handleDelete = async (matriculaId) => {
         try {
-            await fetch(`${API_BASE_URL}/excluir-matricula/${matriculaId}`, {
+            await fetch(`${API_BASE_URL}/matriculas/${matriculaId}`, {
                 method: "DELETE",
             });
             fetchMatriculas();
@@ -83,7 +79,7 @@ const Usuarios = () => {
     };
 
     const openEditModal = (matriculaId) => {
-        const matricula = matriculas.find((m) => m.cp_mt_id === matriculaId);
+        const matricula = matriculas.find((m) => m.id === matriculaId);
         setMatriculaDataToEdit(matricula);
         setShowModal(true);
     };
@@ -94,9 +90,9 @@ const Usuarios = () => {
     };
 
     const filteredMatriculas = matriculas.filter((matricula) => {
-        const nomeUsuario = usuarios[matricula.cp_mt_usuario]?.toLowerCase() || "";
+        const nomeUsuario = usuarios[matricula.usuarioId]?.toLowerCase() || "";
 
-        const statusMatches = !statusFilter || matricula.cp_status_matricula?.toLowerCase() === statusFilter.toLowerCase();
+        const statusMatches = !statusFilter || matricula.status?.toLowerCase() === statusFilter.toLowerCase();
 
         return nomeUsuario.includes(searchTerm.toLowerCase()) && statusMatches;
     });
@@ -157,7 +153,6 @@ const Usuarios = () => {
                 </div>
                 <Link
                     to="/cadastro-matricula"
-                    onClick={() => setShowModal(true)}
                     className="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2"
                 >
                     <Icon icon="ic:baseline-plus" className="icon text-xl line-height-1" />
@@ -171,58 +166,53 @@ const Usuarios = () => {
                             <tr>
                                 <th>Aluno</th>
                                 <th>Status</th>
-                                <th>Parcelas</th>
+                                <th>Valor</th>
+                                <th>Tipo Cobrança</th>
                                 <th className="text-center">Ação</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="4" className="text-center">
+                                    <td colSpan="5" className="text-center">
                                         Carregando...
                                     </td>
                                 </tr>
                             ) : (
                                 currentMatriculas.map((matricula) => (
-                                    <tr key={matricula.cp_mt_id}>
-                                        <td>{usuarios[matricula.cp_mt_usuario]}</td>
+                                    <tr key={matricula.id}>
+                                        <td>{usuarios[matricula.usuarioId]}</td>
                                         <td className="text-left">
                                             <span
-                                                className={`badge ${matricula.cp_status_matricula === "ativo"
+                                                className={`badge ${matricula.status === "ativo"
                                                     ? "bg-success-focus text-success-600 border border-success-main"
-                                                    : matricula.cp_status_matricula === "cancelado"
+                                                    : matricula.status === "cancelado"
                                                         ? "bg-danger-focus text-danger-600 border border-danger-main"
-                                                        : matricula.cp_status_matricula === "trancado"
+                                                        : matricula.status === "trancado"
                                                             ? "bg-warning-focus text-warning-600 border border-warning-main"
-                                                            : matricula.cp_status_matricula === "concluído"
+                                                            : matricula.status === "concluído"
                                                                 ? "bg-primary-focus text-primary-600 border border-primary-main"
                                                                 : "bg-neutral-200 text-neutral-600 border border-neutral-400"
                                                     } px-24 py-4 radius-4 fw-medium text-sm`}
                                             >
-                                                {matricula.cp_status_matricula}
+                                                {matricula.status}
                                             </span>
                                         </td>
-                                        <td>{`${matricula.cp_mt_parcelas_pagas}/${matricula.cp_mt_quantas_parcelas}`}</td>
+                                        <td>R$ {matricula.valorCurso?.toFixed(2)}</td>
+                                        <td>{matricula.tipoCobranca}</td>
                                         <td className="text-center">
-                                            {/* <Link
-                                                to="#"
-                                                className="w-32-px h-32-px me-8 bg-primary-light text-primary-600 rounded-circle d-inline-flex align-items-center justify-content-center"
-                                            >
-                                                <Icon icon="iconamoon:eye-light" />
-                                            </Link> */}
                                             <Link
-                                                to={`/cadastro-matricula/${matricula.cp_mt_id}`}
+                                                to={`/cadastro-matricula/${matricula.id}`}
                                                 className="w-32-px h-32-px me-8 bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
                                             >
                                                 <Icon icon="lucide:edit" />
                                             </Link>
-
-                                            <Link
-                                                to="#"
-                                                className="w-32-px h-32-px me-8 bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center"
+                                            <button
+                                                className="w-32-px h-32-px me-8 bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center border-0"
+                                                onClick={() => handleDelete(matricula.id)}
                                             >
                                                 <Icon icon="mingcute:delete-2-line" />
-                                            </Link>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -232,8 +222,7 @@ const Usuarios = () => {
                 </div>
                 <div className="d-flex align-items-center justify-content-between mt-24">
                     <span>
-                        Mostrando {currentPage} de{" "}
-                        {Math.ceil(filteredMatriculas.length / matriculasPerPage)} páginas
+                        Mostrando {currentPage} de {Math.ceil(filteredMatriculas.length / matriculasPerPage)} páginas
                     </span>
                     <ul className="pagination d-flex flex-wrap align-items-center gap-2 justify-content-center">
                         <li className="page-item">
@@ -256,10 +245,7 @@ const Usuarios = () => {
                         </li>
                         {Array.from(
                             {
-                                length: Math.min(
-                                    5,
-                                    Math.ceil(filteredMatriculas.length / matriculasPerPage)
-                                ),
+                                length: Math.min(5, Math.ceil(filteredMatriculas.length / matriculasPerPage)),
                             },
                             (_, idx) => idx + Math.max(1, Math.min(currentPage - 2, Math.ceil(filteredMatriculas.length / matriculasPerPage) - 4))
                         ).map((page) => (
@@ -275,23 +261,12 @@ const Usuarios = () => {
                                 </button>
                             </li>
                         ))}
-                        {Math.ceil(filteredMatriculas.length / matriculasPerPage) > 5 &&
-                            currentPage + 2 < Math.ceil(filteredMatriculas.length / matriculasPerPage) && (
-                                <li className="page-item">
-                                    <span className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px w-32-px">
-                                        ...
-                                    </span>
-                                </li>
-                            )}
                         <li className="page-item">
                             <button
                                 className="page-link bg-neutral-200 text-secondary-light fw-semibold radius-8 border-0 d-flex align-items-center justify-content-center h-32-px text-md"
                                 onClick={() =>
                                     setCurrentPage((prev) =>
-                                        Math.min(
-                                            prev + 1,
-                                            Math.ceil(filteredMatriculas.length / matriculasPerPage)
-                                        )
+                                        Math.min(prev + 1, Math.ceil(filteredMatriculas.length / matriculasPerPage))
                                     )
                                 }
                                 disabled={currentPage === Math.ceil(filteredMatriculas.length / matriculasPerPage)}
@@ -309,29 +284,10 @@ const Usuarios = () => {
                             </button>
                         </li>
                     </ul>
-                    <select
-                        className="form-select form-select-sm w-auto ps-12 py-6 radius-12 h-40-px"
-                        value={currentPage}
-                        onChange={(e) => {
-                            setCurrentPage(Number(e.target.value));
-                        }}
-                    >
-                        {Array.from(
-                            { length: Math.ceil(filteredMatriculas.length / matriculasPerPage) },
-                            (_, idx) => (
-                                <option key={idx + 1} value={idx + 1}>
-                                    Página {idx + 1}
-                                </option>
-                            )
-                        )}
-                    </select>
-
                 </div>
-
             </div>
-            {showModal && <></>}
         </div>
     );
 };
 
-export default Usuarios;
+export default MatriculasLayout;

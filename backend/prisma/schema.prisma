@@ -14,7 +14,7 @@ model User {
   email            String   @unique @map("cp_email")
   login            String   @unique @map("cp_login")
   password         String   @map("cp_password")
-  tipoUser         String   @map("cp_tipo_user")
+  tipoUser         Int      @map("cp_tipo_user")
   rg               String?  @map("cp_rg")
   cpf              String   @map("cp_cpf")
   dataNascimento   String   @map("cp_datanascimento")

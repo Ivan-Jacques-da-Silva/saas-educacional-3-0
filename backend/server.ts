@@ -1,4 +1,3 @@
-
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import multer from 'multer';
@@ -54,18 +53,18 @@ const logError = (route: string, error: any, req: Request | null = null) => {
     ip: req?.ip || 'UNKNOWN',
     userAgent: req?.get('User-Agent') || 'UNKNOWN'
   };
-  
+
   const logString = `${timestamp} - ${route} - ${error.message || error}\n`;
   const logDir = path.join(__dirname, 'logs');
   const logFile = path.join(logDir, `error-${new Date().toISOString().split('T')[0]}.log`);
-  
+
   // Log detalhado em JSON
   const detailedLogFile = path.join(logDir, `detailed-error-${new Date().toISOString().split('T')[0]}.json`);
-  
+
   try {
     // Log simples
     fs.appendFileSync(logFile, logString);
-    
+
     // Log detalhado
     let existingLogs: any[] = [];
     if (fs.existsSync(detailedLogFile)) {
@@ -230,11 +229,11 @@ app.get('/api/escolas/:id', async (req: Request, res: Response) => {
         }
       }
     });
-    
+
     if (!escola) {
       return res.status(404).json({ error: 'Escola não encontrada' });
     }
-    
+
     res.json(escola);
   } catch (error) {
     logError(`GET /api/escolas/${req.params.id}`, error, req);
@@ -246,11 +245,11 @@ app.get('/api/escolas/:id', async (req: Request, res: Response) => {
 app.delete('/api/escolas/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     await prisma.escola.delete({
       where: { id: parseInt(id) }
     });
-    
+
     res.json({ message: 'Escola excluída com sucesso' });
   } catch (error) {
     logError(`DELETE /api/escolas/${req.params.id}`, error, req);
@@ -295,11 +294,11 @@ app.get('/api/users/:id', async (req: Request, res: Response) => {
         }
       }
     });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
-    
+
     res.json(user);
   } catch (error) {
     logError(`GET /api/users/${req.params.id}`, error, req);
@@ -358,7 +357,7 @@ app.post('/api/users', upload.single('cp_foto_perfil'), async (req: Request, res
         email: cp_email,
         login: cp_login,
         password: hashedPassword,
-        tipoUser: cp_tipo_user,
+        tipoUser: parseInt(cp_tipo_user),
         rg: cp_rg || null,
         cpf: cp_cpf,
         dataNascimento: cp_datanascimento,
@@ -428,7 +427,7 @@ app.put('/api/users/:id', async (req: Request, res: Response) => {
       nome: cp_nome,
       email: cp_email,
       login: cp_login,
-      tipoUser: cp_tipo_user,
+      tipoUser: parseInt(cp_tipo_user),
       rg: cp_rg || null,
       cpf: cp_cpf,
       dataNascimento: cp_datanascimento,
@@ -468,11 +467,11 @@ app.put('/api/users/:id', async (req: Request, res: Response) => {
 app.delete('/api/users/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     await prisma.user.delete({
       where: { id: parseInt(id) }
     });
-    
+
     res.json({ message: 'Usuário excluído com sucesso' });
   } catch (error) {
     logError(`DELETE /api/users/${req.params.id}`, error, req);
@@ -541,11 +540,11 @@ app.get('/api/matriculas/:id', async (req: Request, res: Response) => {
         }
       }
     });
-    
+
     if (!matricula) {
       return res.status(404).json({ error: 'Matrícula não encontrada' });
     }
-    
+
     res.json(matricula);
   } catch (error) {
     logError(`GET /api/matriculas/${req.params.id}`, error, req);
@@ -722,11 +721,11 @@ app.put('/api/matriculas/:id', async (req: Request, res: Response) => {
 app.delete('/api/matriculas/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     await prisma.matricula.delete({
       where: { id: parseInt(id) }
     });
-    
+
     res.json({ message: 'Matrícula excluída com sucesso' });
   } catch (error) {
     logError(`DELETE /api/matriculas/${req.params.id}`, error, req);
@@ -802,11 +801,11 @@ app.get('/api/cursos/:id', async (req: Request, res: Response) => {
         }
       }
     });
-    
+
     if (!curso) {
       return res.status(404).json({ error: 'Curso não encontrado' });
     }
-    
+
     res.json(curso);
   } catch (error) {
     logError(`GET /api/cursos/${req.params.id}`, error, req);
@@ -940,11 +939,11 @@ app.put('/api/cursos/:id', upload.single('arquivo'), async (req: Request, res: R
 app.delete('/api/cursos/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     await prisma.curso.delete({
       where: { id: parseInt(id) }
     });
-    
+
     res.json({ message: 'Curso excluído com sucesso' });
   } catch (error) {
     logError(`DELETE /api/cursos/${req.params.id}`, error, req);
