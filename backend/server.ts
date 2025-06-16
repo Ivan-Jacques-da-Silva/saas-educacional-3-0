@@ -1035,7 +1035,7 @@ app.put('/api/edit-user/:id', upload.single('cp_foto_perfil'), async (req, res) 
     }
 
     // Preparar dados para atualização
-    const updateData = {
+    const updateData: any = {
       nome: userData.cp_nome,
       email: userData.cp_email,
       login: userData.cp_login,
