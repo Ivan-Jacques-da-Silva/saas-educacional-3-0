@@ -120,7 +120,7 @@ const CadastroMatricula = ({
 
 
     const buscarDadosUsuario = (usuarioId) => {
-        axios.get(`${API_BASE_URL}/api/users/${usuarioId}`)
+        axios.get(`${API_BASE_URL}/users/${usuarioId}`)
             .then(response => {
                 if (response.data) {
                     setDadosUsuario(response.data); // Atualiza os dados do usuário
@@ -169,12 +169,12 @@ const CadastroMatricula = ({
     useEffect(() => {
         if (!matriculaId) {
             axios
-                .get(`${API_BASE_URL}/api/usuarios-matricula`)
+                .get(`${API_BASE_URL}/users`)
                 .then((response) => {
                     const schoolId = localStorage.getItem("schoolId");
 
                     const usuariosFiltrados = response.data.filter(usuario =>
-                        !schoolId || usuario.escolaId == schoolId
+                        (!schoolId || usuario.escolaId == schoolId) && usuario.tipoUser === "Aluno"
                     );
 
                     setUsuarios(usuariosFiltrados);
@@ -300,8 +300,8 @@ const CadastroMatricula = ({
                     contatoMae: matriculaData.contatoMae,
                 };
 
-                const response = await axios.put(`${API_BASE_URL}/api/matriculas/${matriculaId}`, editObj);
-                if (response.data?.message === "Matrícula atualizada com sucesso") {
+                const response = await axios.put(`${API_BASE_URL}/matriculas/${matriculaId}`, editObj);
+                if (response.status === 200) {
                     toast.success("Matrícula editada com sucesso");
                 } else {
                     toast.error("Erro ao editar matrícula");
@@ -329,8 +329,8 @@ const CadastroMatricula = ({
                     contatoMae: matriculaData.contatoMae,
                 };
 
-                const response = await axios.post(`${API_BASE_URL}/api/matriculas`, createObj);
-                if (response.data?.message === "Matrícula cadastrada com sucesso") {
+                const response = await axios.post(`${API_BASE_URL}/matriculas`, createObj);
+                if (response.status === 201) {
                     toast.success("Matrícula cadastrada com sucesso");
                     limparCampos();
                 } else {

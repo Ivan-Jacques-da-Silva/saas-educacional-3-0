@@ -52,7 +52,7 @@ const CadastroCursoModal = ({ show, onHide, cursoToEdit, onCursoSaved }) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/users`);
       const instrutoresData = response.data.filter(user => 
-        user.tipoUser === "2" || user.tipoUser === "4" // Diretor ou Professor
+        user.tipoUser === "Diretor" || user.tipoUser === "Professor"
       );
       setInstrutores(instrutoresData);
     } catch (error) {
@@ -110,13 +110,13 @@ const CadastroCursoModal = ({ show, onHide, cursoToEdit, onCursoSaved }) => {
 
       let response;
       if (cursoToEdit) {
-        response = await axios.put(`${API_BASE_URL}/api/cursos/${cursoToEdit.id}`, formDataToSend, {
+        response = await axios.put(`${API_BASE_URL}/cursos/${cursoToEdit.id}`, formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
       } else {
-        response = await axios.post(`${API_BASE_URL}/api/cursos`, formDataToSend, {
+        response = await axios.post(`${API_BASE_URL}/cursos`, formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },

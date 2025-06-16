@@ -63,9 +63,10 @@ const CadastroTurmaModal = ({ turmaID }) => {
 
   const fetchAlunosPorEscola = async (escolaId) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/escola/alunos/${escolaId}`);
-      setAlunosPorEscola(response.data);
-      setAlunosFiltrados(response.data);
+      const response = await axios.get(`${API_BASE_URL}/users`);
+      const alunos = response.data.filter(user => user.tipoUser === "Aluno" && user.escolaId === escolaId)
+      setAlunosPorEscola(alunos);
+      setAlunosFiltrados(alunos);
     } catch (error) {
       console.error("Erro ao buscar os alunos da escola:", error);
     }
@@ -81,13 +82,15 @@ const CadastroTurmaModal = ({ turmaID }) => {
               cp_tr_data: new Date(response.data.cp_tr_data).toISOString().split("T")[0],
             });
 
-            // ✅ Busca os alunos apenas uma vez
-            const res = await axios.get(`${API_BASE_URL}/escola/alunos/${response.data.cp_tr_id_escola}`);
+            // Busca os alunos apenas uma vez
+            const res = await axios.get(`${API_BASE_URL}/users`);
+            const todosAlunos = res.data.filter(user => 
+              user.tipoUser === "Aluno" && user.escolaId == response.data.cp_tr_id_escola
+            );
 
-            if (res.data.length > 0) {
-              const todosAlunos = res.data;
-              const alunosDaTurma = todosAlunos.filter(aluno => aluno.cp_turma_id == turmaID);
-              const alunosIDs = alunosDaTurma.map(aluno => aluno.cp_id);
+            if (todosAlunos.length > 0) {
+              const alunosDaTurma = todosAlunos.filter(aluno => aluno.turmaId == turmaID);
+              const alunosIDs = alunosDaTurma.map(aluno => aluno.id);
 
               setTurmaData(prev => ({
                 ...prev,
@@ -96,8 +99,8 @@ const CadastroTurmaModal = ({ turmaID }) => {
 
               // ✅ Ordenação correta para manter os alunos da turma no topo
               const alunosOrdenados = [...todosAlunos].sort((a, b) => {
-                const aNaTurma = alunosIDs.includes(a.cp_id) ? -1 : 1;
-                const bNaTurma = alunosIDs.includes(b.cp_id) ? -1 : 1;
+                const aNaTurma = alunosIDs.includes(a.id) ? -1 : 1;
+                const bNaTurma = alunosIDs.includes(b.id) ? -1 : 1;
                 return aNaTurma - bNaTurma || a.cp_nome.localeCompare(b.cp_nome);
               });
 
@@ -366,12 +369,12 @@ const CadastroTurmaModal = ({ turmaID }) => {
                             </thead>
                             <tbody>
                               {alunosFiltrados.map((aluno) => (
-                                <tr key={aluno.cp_id}>
+                                <tr key={aluno.id}>
                                   <td>
                                     <Form.Check
                                       type="checkbox"
-                                      checked={Array.isArray(turmaData.cp_tr_alunos) && turmaData.cp_tr_alunos.includes(aluno.cp_id)}
-                                      onChange={(e) => handleCheckboxChange(e, aluno.cp_id)}
+                                      checked={Array.isArray(turmaData.cp_tr_alunos) && turmaData.cp_tr_alunos.includes(aluno.id)}
+                                      onChange={(e) => handleCheckboxChange(e, aluno.id)}
                                     />
 
                                   </td>
