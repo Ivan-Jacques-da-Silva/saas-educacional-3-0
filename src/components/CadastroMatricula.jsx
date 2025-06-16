@@ -96,7 +96,7 @@ const CadastroMatricula = ({
 
     useEffect(() => {
         if (matriculaId) {
-            axios.get(`${API_BASE_URL}/matriculas/${matriculaId}`)
+            axios.get(`${API_BASE_URL}/api/matriculas/${matriculaId}`)
                 .then(response => {
                     if (response.data) {
                         setMatriculaData(prevData => ({

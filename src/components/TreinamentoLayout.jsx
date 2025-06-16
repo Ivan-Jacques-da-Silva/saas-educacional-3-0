@@ -916,4 +916,111 @@ const Treinamento = () => {
                       <div className="d-flex flex-wrap gap-2 mt-3">
                         {[material.cp_mat_arquivoPdf, material.cp_mat_extra_pdf2, material.cp_mat_extra_pdf3]
                           .filter(Boolean)
-                          .map((This code removes the `/api` prefix from the specified backend routes.
+                          .map((pdfUrl, index) => (
+                            <div key={index} className="d-flex flex-wrap gap-0">
+                              <Button
+                                variant="primary"
+                                className="px-3"
+                                onClick={() => handleViewPDF(pdfUrl)}
+                                style={{
+                                  flex: "1 1 auto",
+                                  minWidth: "150px",
+                                  borderRadius: material.cp_mat_permitirDownload === 1 ? "5px 0 0 5px" : "5px",
+                                  border: "none",
+                                }}
+                              >
+                                Abrir {typeof pdfUrl === "string" ? truncarTexto(pdfUrl.split("/").pop(), 15) : truncarTexto(pdfUrl.name, 15)}
+                              </Button>
+                              {material.cp_mat_permitirDownload === 1 && (
+                                <Button
+                                  variant="success"
+                                  className="px-3"
+                                  onClick={() => handleDownload([pdfUrl])}
+                                  style={{
+                                    flex: "0 1 auto",
+                                    borderRadius: "0 5px 5px 0",
+                                    border: "none",
+                                  }}
+                                >
+                                  <FaDownload />
+                                </Button>
+                              )}
+                            </div>
+
+                          ))}
+                      </div>
+                      {userType === 1 && (
+                        <div className="d-flex gap-2 mt-3">
+                          <Button variant="warning" onClick={() => handleEdit(material)} className="d-flex align-items-center" style={{ fontSize: "0.9rem" }}>
+                            <FaEdit className="me-2" /> Editar
+                          </Button>
+                          <Button variant="danger" onClick={() => handleDelete(material.cp_mat_id)} className="d-flex align-items-center" style={{ fontSize: "0.9rem" }}>
+                            <FaTrash className="me-2" /> Excluir
+                          </Button>
+                        </div>
+                      )}
+                    </Col>
+                  </Row>
+
+                </Card.Body>
+              </Card>
+            ))
+            )}
+
+          </Col>
+        </Col>
+      </Row>
+      <Modal
+        style={{ zIndex: "1050" }}
+        show={showPDF}
+        onHide={handleClose}
+        centered
+        fullscreen
+        dialogClassName="modal-90w"
+        className="custom-modal-size bg-dark text-white"
+      >
+        <Button
+          variant="secondary"
+          onClick={handleClose}
+          className="position-absolute top-0 end-0 m-3"
+          style={{
+            zIndex: 1060,
+            borderRadius: "50%",
+            width: "40px",
+            height: "40px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          ✕
+        </Button>
+        <iframe
+          src={`https://docs.google.com/gview?url=${pdfUrl}&embedded=true&zoom=100`}
+          width="100%"
+          height="100%"
+          className="border-0"
+          title="PDF Viewer"
+          style={{
+            border: "none",
+            width: "100vw",
+            height: "100vh",
+            pointerEvents: "none",
+          }}
+        />
+      </Modal>
+
+
+      <ModalVideo
+        channel="youtube"
+        youtube={{ mute: 0, autoplay: 0 }}
+        isOpen={isOpen}
+        videoId={videoId}
+        onClose={() => setOpen(false)}
+      />
+
+    </Container>
+  );
+};
+
+export default Treinamento;

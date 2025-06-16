@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-const API_BASE_URL_NEW = "http://localhost:5000";
+import { API_BASE_URL } from "./config";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Row, Col, Button, Form, Modal } from "react-bootstrap";
@@ -83,7 +84,7 @@ const CadastroAudio = ({ audioID }) => {
 
   const buscarCurso = async (idCurso) => {
     try {
-      const resp = await axios.get(`${API_BASE_URL_NEW}/cursos/${idCurso}`);
+      const resp = await axios.get(`${API_BASE_URL}/cursos/${idCurso}`);
       const link = resp.data.youtubeLink;
       const courseName = resp.data.titulo;
       const matchingOption = opcoesCursos.find(option => option.value === courseName);
@@ -101,7 +102,7 @@ const CadastroAudio = ({ audioID }) => {
 
   const buscarAudiosDoCurso = async (idCurso) => {
     try {
-      const resp = await axios.get(`${API_BASE_URL_NEW}/audios-curso/${idCurso}`);
+      const resp = await axios.get(`${API_BASE_URL}/audios-curso/${idCurso}`);
       setAudioData((dadosAntigos) => ({
         ...dadosAntigos,
         audios: resp.data || []
@@ -113,7 +114,7 @@ const CadastroAudio = ({ audioID }) => {
 
   const fetchCursos = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL_NEW}/cursos`);
+      const response = await axios.get(`${API_BASE_URL}/cursos`);
       setCursos(response.data);
     } catch (error) {
       console.error("Erro ao buscar os cursos:", error);
@@ -167,7 +168,7 @@ const CadastroAudio = ({ audioID }) => {
           }
         });
 
-        await axios.put(`${API_BASE_URL_NEW}/cursos/${audioID}`, cursoFormData, {
+        await axios.put(`${API_BASE_URL}/cursos/${audioID}`, cursoFormData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
@@ -178,7 +179,7 @@ const CadastroAudio = ({ audioID }) => {
           audiosNovos.forEach((audio) => {
             audioFormData.append("audios", audio);
           });
-          await axios.put(`${API_BASE_URL_NEW}/cursos/${audioID}/audios`, audioFormData, {
+          await axios.put(`${API_BASE_URL}/cursos/${audioID}/audios`, audioFormData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
         }
@@ -194,7 +195,7 @@ const CadastroAudio = ({ audioID }) => {
           cursoFormData.append(`pdf${index + 1}`, pdf);
         });
 
-        const response = await axios.post(`${API_BASE_URL_NEW}/cursos`, cursoFormData, {
+        const response = await axios.post(`${API_BASE_URL}/cursos`, cursoFormData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         const cursoId = response.data.id;
@@ -204,7 +205,7 @@ const CadastroAudio = ({ audioID }) => {
           audioData.audios.forEach((audio) => {
             audioFormData.append("audios", audio);
           });
-          await axios.post(`${API_BASE_URL_NEW}/cursos/${cursoId}/audios`, audioFormData, {
+          await axios.post(`${API_BASE_URL}/cursos/${cursoId}/audios`, audioFormData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
         }
@@ -216,7 +217,7 @@ const CadastroAudio = ({ audioID }) => {
       console.error("❌ Erro ao processar o áudio:", error);
       toast.error("Erro ao processar o áudio");
       if (!audioID && error.response?.data?.id) {
-        await axios.delete(`${API_BASE_URL_NEW}/cursos/${error.response.data.id}`);
+        await axios.delete(`${API_BASE_URL}/cursos/${error.response.data.id}`);
       }
     } finally {
       setIsLoading(false);
