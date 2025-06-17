@@ -6,9 +6,9 @@ import { ToastContainer, toast } from "react-toastify";
 import { Form, Row, Col, Button, Modal } from "react-bootstrap";
 import './modal.css'
 
-const CadastroMatricula = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const matriculaId = urlParams.get('id');
+const CadastroMatricula = ({
+    matriculaId,
+}) => {
     const [usuarios, setUsuarios] = useState([]);
     const [dadosUsuario, setDadosUsuario] = useState({});
     const [cursos, setCursos] = useState([]);
@@ -933,8 +933,7 @@ const CadastroMatricula = () => {
                                                             horarioFim: e.target.value,
                                                         })
                                                     }
-                                                    className="form-control"
-                                                    placeholder="Horário de término"
+                                                    className="form-control                                                    placeholder="Horário de término"
                                                 />
                                             </Col>
                                         </Row>

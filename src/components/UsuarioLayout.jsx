@@ -234,7 +234,7 @@ const Usuarios = () => {
                                         <td>{mapUserType(user.tipoUser)}</td>
                                         <td className="text-center">
                                             <Link
-                                                to={`/cadastro-usuario?id=${user.id}`}
+                                                to={`/cadastro-usuario/${user.id}`}
                                                 className="w-32-px h-32-px me-8 bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
                                             >
                                                 <Icon icon="lucide:edit" />

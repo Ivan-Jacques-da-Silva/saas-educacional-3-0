@@ -237,7 +237,7 @@ const MatriculasLayout = () => {
                                         <td className="text-center">
                                             <div className="d-flex align-items-center gap-10 justify-content-center">
                                                 <a 
-                                                    href={`/cadastro-matricula?id=${matricula.id}`}
+                                                    href={`/cadastro-matricula/${matricula.id}`}
                                                     className="bg-success-100 text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"
                                                 >
                                                     <i className="ri-edit-line"></i>
