@@ -744,8 +744,8 @@ const CadastroMatricula = ({
                                             name="escolaId"
                                             value={
                                                 escolas.find(
-                                                    (escola) => escola.cp_ec_id === dadosUsuario.escolaId
-                                                )?.cp_ec_nome || ""
+                                                    (escola) => escola.id === dadosUsuario.escolaId
+                                                )?.nome || ""
                                             }
                                             className="form-control"
                                             placeholder="Escola"
@@ -869,8 +869,8 @@ const CadastroMatricula = ({
                                         >
                                             <option value="">Selecione o curso</option>
                                             {cursos.map((curso) => (
-                                                <option key={curso.cp_curso_id} value={curso.cp_curso_id}>
-                                                    {curso.cp_nome_curso}
+                                                <option key={curso.id} value={curso.id}>
+                                                    {curso.titulo}
                                                 </option>
                                             ))}
                                         </select>

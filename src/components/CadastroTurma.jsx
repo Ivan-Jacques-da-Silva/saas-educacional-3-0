@@ -30,6 +30,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
   const [alunosFiltrados, setAlunosFiltrados] = useState([]);
   const [mensagem, setMensagem] = useState({ tipo: "", texto: "" });
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
 
   const handleShowModal = () => setShowModal(true);
@@ -326,8 +327,8 @@ const CadastroTurmaModal = ({ turmaID }) => {
                     >
                       <option value="" disabled>Selecione uma escola</option>
                       {escolas.map((escola) => (
-                        <option key={escola.cp_ec_id} value={escola.cp_ec_id}>
-                          {escola.cp_ec_nome}
+                        <option key={escola.id} value={escola.id}>
+                          {escola.nome}
                         </option>
                       ))}
                     </select>
@@ -390,55 +391,34 @@ const CadastroTurmaModal = ({ turmaID }) => {
               <div className="card-body">
                 <Row className="gy-3">
                   <Col md={12}>
-                    <label htmlFor="search">Buscar Aluno:</label>
-                    <div className="input-group">
-                      <input
-                        type="text"
-                        id="search"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="form-control"
-                        placeholder="Digite o nome do aluno"
-                      />
-                      <Button variant="outline-secondary">
-                        <FaSearch />
-                      </Button>
-                    </div>
+                    <label>Buscar Aluno:</label>
+                    <Button 
+                      variant="outline-primary" 
+                      onClick={() => setShowModal(true)}
+                      disabled={!turmaData.cp_tr_id_escola}
+                      className="w-100 mt-2"
+                    >
+                      <FaSearch className="me-2" />
+                      Selecionar Alunos ({turmaData.cp_tr_alunos.length} selecionados)
+                    </Button>
                   </Col>
 
                   <Col md={12}>
-                    <div className="table-container">
-                      {alunosFiltrados.length > 0 ? (
-                        <div className="table-responsive overflow-auto" style={{ maxHeight: "300px" }}>
-                          <Table striped bordered hover className="overflow-auto">
-                            <thead>
-                              <tr>
-                                <th>#</th>
-                                <th>Nome</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {alunosFiltrados.map((aluno) => (
-                                <tr key={aluno.id}>
-                                  <td>
-                                    <Form.Check
-                                      type="checkbox"
-                                      checked={Array.isArray(turmaData.cp_tr_alunos) && turmaData.cp_tr_alunos.includes(aluno.id)}
-                                      onChange={(e) => handleCheckboxChange(e, aluno.id)}
-                                    />
-
-                                  </td>
-                                  <td>{aluno.cp_nome}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </Table>
+                    {turmaData.cp_tr_alunos.length > 0 && (
+                      <div className="mt-3">
+                        <small className="text-muted">Alunos selecionados:</small>
+                        <div className="selected-students">
+                          {alunosPorEscola
+                            .filter(aluno => turmaData.cp_tr_alunos.includes(aluno.id))
+                            .map(aluno => (
+                              <span key={aluno.id} className="badge bg-primary me-1 mb-1">
+                                {aluno.cp_nome}
+                              </span>
+                            ))
+                          }
                         </div>
-                      ) : (
-                        <p className="text-muted">Nenhum aluno encontrado. Selecione uma escola!</p>
-                      )}
-
-                    </div>
+                      </div>
+                    )}
                   </Col>
                 </Row>
               </div>
@@ -447,12 +427,13 @@ const CadastroTurmaModal = ({ turmaID }) => {
         </Row>
 
         <div className="mt-4 text-center">
-          <Button variant="primary" onClick={handleShowModal}>
+          <Button variant="primary" onClick={() => setShowConfirmModal(true)}>
             {turmaID ? "Salvar Alterações" : "Cadastrar Turma"}
           </Button>
         </div>
-      </form>
-      <Modal show={showModal} onHide={handleCloseModal} centered>
+      
+      {/* Modal de Confirmação */}
+      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Cadastro</Modal.Title>
         </Modal.Header>
@@ -460,11 +441,64 @@ const CadastroTurmaModal = ({ turmaID }) => {
           Tem certeza que deseja {turmaID ? "salvar as alterações" : "cadastrar esta turma"}?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
+          <Button variant="primary" onClick={(e) => {
+            setShowConfirmModal(false);
+            handleSubmit(e);
+          }}>
             Confirmar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      </form>
+      <Modal show={showModal} onHide={handleCloseModal} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Selecionar Alunos</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="mb-3">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="form-control"
+              placeholder="Digite o nome do aluno para filtrar"
+            />
+          </div>
+          <div className="table-responsive" style={{ maxHeight: "400px", overflowY: "auto" }}>
+            {alunosFiltrados.length > 0 ? (
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th width="50">#</th>
+                    <th>Nome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {alunosFiltrados.map((aluno) => (
+                    <tr key={aluno.id}>
+                      <td>
+                        <Form.Check
+                          type="checkbox"
+                          checked={Array.isArray(turmaData.cp_tr_alunos) && turmaData.cp_tr_alunos.includes(aluno.id)}
+                          onChange={(e) => handleCheckboxChange(e, aluno.id)}
+                        />
+                      </td>
+                      <td>{aluno.cp_nome}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            ) : (
+              <p className="text-muted text-center">Nenhum aluno encontrado. Selecione uma escola!</p>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Fechar
           </Button>
         </Modal.Footer>
       </Modal>
