@@ -486,7 +486,7 @@ const Audios = () => {
                             </ul>
                             <select
                                 className="form-select form-select-sm w-auto ps-12 py-6 radius-12 h-40-px"
-                                value={paginaAtual}
+                               value={paginaAtual}
                                 onChange={(e) => setPaginaAtual(Number(e.target.value))}
                             >
                                 {Array.from({ length: totalPaginasAudiosCurso }, (_, idx) => (

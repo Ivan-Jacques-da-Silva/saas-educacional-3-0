@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "./config";
@@ -128,36 +127,36 @@ const CadastroAudio = ({ audioID }) => {
 
   const handleFileChange = (e) => {
     const { files, name } = e.target;
-    
+
     if (name === "audios") {
       // Validar se todos os arquivos são MP3
       const arquivosInvalidos = Array.from(files).filter(file => !file.type.includes('audio/mpeg') && !file.name.toLowerCase().endsWith('.mp3'));
-      
+
       if (arquivosInvalidos.length > 0) {
         toast.error("Apenas arquivos MP3 são permitidos para áudios!");
         e.target.value = ""; // Limpar o input
         return;
       }
-      
+
       const novosAudios = [...(audioData.audios || []), ...Array.from(files)];
       setAudioData((prevAudioData) => ({ ...prevAudioData, audios: novosAudios }));
     } else if (name === "pdfs") {
       // Validar se todos os arquivos são PDF
       const arquivosInvalidos = Array.from(files).filter(file => !file.type.includes('application/pdf'));
-      
+
       if (arquivosInvalidos.length > 0) {
         toast.error("Apenas arquivos PDF são permitidos!");
         e.target.value = ""; // Limpar o input
         return;
       }
-      
+
       // Verificar limite de 3 PDFs
       if (files.length + audioData.pdfs.length > 3) {
         toast.error("Máximo de 3 PDFs permitidos.");
         e.target.value = ""; // Limpar o input
         return;
       }
-      
+
       const novosPdfs = [...(audioData.pdfs || []), ...Array.from(files)].slice(0, 3);
       setAudioData((prevAudioData) => ({ ...prevAudioData, pdfs: novosPdfs }));
     }
@@ -179,13 +178,13 @@ const CadastroAudio = ({ audioID }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validação obrigatória do curso
     if (!audioData.cursoId) {
       toast.error("Por favor, selecione um curso!");
       return;
     }
-    
+
     setIsLoading(true);
     try {
       if (audioID) {
@@ -354,7 +353,7 @@ const CadastroAudio = ({ audioID }) => {
                           </div>
                         </div>
                       ))}
-                      
+
                       <label
                         className="upload-file-multiple h-120-px w-120-px border input-form-light radius-8 overflow-hidden border-dashed bg-light d-flex align-items-center flex-column justify-content-center gap-1"
                         htmlFor="upload-audio"
@@ -398,7 +397,7 @@ const CadastroAudio = ({ audioID }) => {
                           </div>
                         </div>
                       ))}
-                      
+
                       {audioData.pdfs.length < 3 && (
                         <label
                           className="upload-file-multiple h-120-px w-120-px border input-form-light radius-8 overflow-hidden border-dashed bg-light d-flex align-items-center flex-column justify-content-center gap-1"
@@ -433,7 +432,7 @@ const CadastroAudio = ({ audioID }) => {
           </Button>
         </div>
       </form>
-      
+
       <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Cadastro</Modal.Title>

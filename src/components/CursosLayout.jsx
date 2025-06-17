@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { Link } from "react-router-dom";
@@ -41,20 +40,18 @@ const CursosLayout = () => {
         try {
             const response = await fetch(`${API_BASE_URL}/cursos`);
             const data = await response.json();
-            
-            // Filtrar por escola se necessário
-            let filteredData = data;
+
             if (shouldFilterBySchool()) {
-                const schoolId = getUserSchoolId();
-                if (schoolId) {
-                    filteredData = data.filter(curso => curso.escolaId === parseInt(schoolId));
-                }
+                const userSchoolId = getUserSchoolId();
+                const filtered = data.filter(curso => 
+                    curso.instrutor?.escolaId === parseInt(userSchoolId)
+                );
+                setCursos(filtered);
+            } else {
+                setCursos(data);
             }
-            
-            setCursos(filteredData);
-            setFilteredCursos(filteredData);
         } catch (error) {
-            console.error("Erro ao buscar cursos:", error);
+            console.error('Erro ao carregar cursos:', error);
         } finally {
             setIsLoading(false);
         }
@@ -167,13 +164,13 @@ const CursosLayout = () => {
                                             <td>{(currentPage - 1) * cursosPerPage + index + 1}</td>
                                             <td>
                                                 <span className="text-md mb-0 fw-normal text-secondary-light">
-                                                    {curso.nome}
+                                                {curso.titulo}
                                                 </span>
                                             </td>
                                             <td>{formatDate(curso.dataCadastro)}</td>
                                             <td>
                                                 <span className="text-sm text-secondary-light">
-                                                    {curso.descricao || "-"}
+                                                {curso.descricao}
                                                 </span>
                                             </td>
                                             <td className="text-center">
@@ -236,7 +233,7 @@ const CursosLayout = () => {
                                 } else {
                                     pageNumber = currentPage - 2 + idx;
                                 }
-                                
+
                                 return (
                                     <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? "active" : ""}`}>
                                         <button

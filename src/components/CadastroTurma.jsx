@@ -182,14 +182,24 @@ const CadastroTurmaModal = ({ turmaID }) => {
     });
   };
 
+  const handleAlunoChange = (alunoId) => {
+    setTurmaData((prev) => {
+      const alunosSelecionados = prev.cp_tr_alunos.includes(alunoId)
+        ? prev.cp_tr_alunos.filter((id) => id !== alunoId)
+        : [...prev.cp_tr_alunos, alunoId];
+
+      return { ...prev, cp_tr_alunos: alunosSelecionados };
+    });
+  };
+
   const handleDiasSemanaChange = (e) => {
     const { value, checked } = e.target;
-    setTurmaData((prevData) => {
-      const updatedDias = checked
-        ? [...prevData.cp_tr_dias_semana, value]
-        : prevData.cp_tr_dias_semana.filter((dia) => dia !== value);
-      
-      return { ...prevData, cp_tr_dias_semana: updatedDias };
+    setTurmaData((prev) => {
+      const diasSelecionados = checked
+        ? [...prev.cp_tr_dias_semana, value]
+        : prev.cp_tr_dias_semana.filter((dia) => dia !== value);
+
+      return { ...prev, cp_tr_dias_semana: diasSelecionados };
     });
   };
 
