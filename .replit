@@ -30,7 +30,7 @@ args = "cd backend && npm start"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "npm start"
 
 [[ports]]
 localPort = 3000
