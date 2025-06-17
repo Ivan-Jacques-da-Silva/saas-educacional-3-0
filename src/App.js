@@ -47,7 +47,7 @@ function App() {
         <Route exact path="/cadastro-turma" element={<CadastroTurma />} />
         <Route exact path="/cadastro-turma/:id" element={<PaginaCadastroTurma />} />
         <Route exact path="/cadastro-matricula" element={<CadastroMatricula />} />
-        <Route exact path="/cadastro-matricula/:matriculaId" element={<PaginaCadastroMatricula />} />
+        <Route exact path="/cadastro-matricula/:id" element={<PaginaCadastroMatricula />} />
         <Route exact path="/cadastro-audio" element={<CadastroAudio />} />
         <Route exact path="/cadastro-audio/:id" element={<CadastroAudioEditar />} />
 
