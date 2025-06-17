@@ -10,7 +10,17 @@ const prisma = new PrismaClient();
 // Configuração do multer para upload de arquivos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '..', 'uploads');
+    let uploadDir;
+    
+    // Verificar se é áudio (.mp3) ou PDF
+    if (file.mimetype === 'audio/mpeg' || file.originalname.toLowerCase().endsWith('.mp3')) {
+      uploadDir = path.join(__dirname, '..', 'uploads', 'audios');
+    } else if (file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf')) {
+      uploadDir = path.join(__dirname, '..', 'uploads', 'pdfs');
+    } else {
+      uploadDir = path.join(__dirname, '..', 'uploads', 'outros');
+    }
+    
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -22,7 +32,27 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+// Filtro para aceitar apenas .mp3 e .pdf
+const fileFilter = (req: any, file: any, cb: any) => {
+  const allowedMimes = ['audio/mpeg', 'application/pdf'];
+  const allowedExtensions = ['.mp3', '.pdf'];
+  
+  const isValidMime = allowedMimes.includes(file.mimetype);
+  const isValidExtension = allowedExtensions.some(ext => 
+    file.originalname.toLowerCase().endsWith(ext)
+  );
+  
+  if (isValidMime || isValidExtension) {
+    cb(null, true);
+  } else {
+    cb(new Error('Apenas arquivos .mp3 e .pdf são permitidos'), false);
+  }
+};
+
+const upload = multer({ 
+  storage,
+  fileFilter
+});
 
 // Função para logging de erros
 const logError = (route: string, error: any, req: Request | null = null) => {
@@ -196,9 +226,19 @@ router.put('/cursos/:id', upload.single('arquivo'), async (req: Request, res: Re
 
       // Remover arquivo antigo se existir
       if (cursoExistente.arquivo) {
-        const oldFilePath = path.join(__dirname, '..', 'uploads', cursoExistente.arquivo);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
+        // Tentar encontrar o arquivo nas diferentes pastas
+        const possiblePaths = [
+          path.join(__dirname, '..', 'uploads', 'audios', cursoExistente.arquivo),
+          path.join(__dirname, '..', 'uploads', 'pdfs', cursoExistente.arquivo),
+          path.join(__dirname, '..', 'uploads', 'outros', cursoExistente.arquivo),
+          path.join(__dirname, '..', 'uploads', cursoExistente.arquivo) // pasta antiga
+        ];
+        
+        for (const filePath of possiblePaths) {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            break;
+          }
         }
       }
     }
@@ -238,9 +278,19 @@ router.delete('/cursos/:id', async (req: Request, res: Response) => {
 
     // Remover arquivo se existir
     if (curso.arquivo) {
-      const filePath = path.join(__dirname, '..', 'uploads', curso.arquivo);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+      // Tentar encontrar o arquivo nas diferentes pastas
+      const possiblePaths = [
+        path.join(__dirname, '..', 'uploads', 'audios', curso.arquivo),
+        path.join(__dirname, '..', 'uploads', 'pdfs', curso.arquivo),
+        path.join(__dirname, '..', 'uploads', 'outros', curso.arquivo),
+        path.join(__dirname, '..', 'uploads', curso.arquivo) // pasta antiga
+      ];
+      
+      for (const filePath of possiblePaths) {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          break;
+        }
       }
     }
 
