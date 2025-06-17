@@ -283,3 +283,161 @@ const MatriculasLayout = () => {
 };
 
 export default MatriculasLayout;
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { API_BASE_URL_NEW } from "../config/api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const MatriculasLayout = () => {
+  const [matriculas, setMatriculas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchMatriculas();
+  }, []);
+
+  const fetchMatriculas = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL_NEW}/matriculas`);
+      setMatriculas(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Erro ao buscar matrículas:", error);
+      toast.error("Erro ao carregar matrículas");
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (matriculaId) => {
+    navigate(`/cadastro-matricula/${matriculaId}`);
+  };
+
+  const handleDelete = async (matriculaId) => {
+    if (window.confirm("Tem certeza que deseja excluir esta matrícula?")) {
+      try {
+        await axios.delete(`${API_BASE_URL_NEW}/matriculas/${matriculaId}`);
+        toast.success("Matrícula excluída com sucesso");
+        fetchMatriculas();
+      } catch (error) {
+        console.error("Erro ao excluir matrícula:", error);
+        toast.error("Erro ao excluir matrícula");
+      }
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Não informado";
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  const formatCurrency = (value) => {
+    if (!value) return "R$ 0,00";
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  return (
+    <div className="card h-100 p-0 radius-12">
+      <ToastContainer />
+      <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+        <h6 className="text-lg fw-semibold mb-0">Lista de Matrículas</h6>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => navigate("/cadastro-matricula")}
+        >
+          Nova Matrícula
+        </button>
+      </div>
+      <div className="card-body p-24">
+        <div className="table-responsive scroll-sm">
+          <table className="table bordered-table sm-table mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Aluno</th>
+                <th scope="col">CPF</th>
+                <th scope="col">Escola</th>
+                <th scope="col">Valor Curso</th>
+                <th scope="col">Tipo Cobrança</th>
+                <th scope="col">Status</th>
+                <th scope="col">Data Cadastro</th>
+                <th scope="col" className="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {matriculas.map((matricula) => (
+                <tr key={matricula.id}>
+                  <td>
+                    <div className="d-flex align-items-center">
+                      <span className="text-md mb-0 fw-normal text-secondary-light">
+                        {matricula.usuario?.nome || "Não informado"}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {matricula.usuario?.cpf || "Não informado"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {matricula.escola?.nome || "Não informado"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {formatCurrency(matricula.valorCurso)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {matricula.tipoCobranca || "Não informado"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${matricula.status === 'ativo' ? 'text-success-600 bg-success-100' : 'text-danger-600 bg-danger-100'}`}>
+                      {matricula.status}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {formatDate(matricula.createdAt)}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="d-flex align-items-center justify-content-center gap-10">
+                      <button
+                        type="button"
+                        className="text-xl text-success-600"
+                        onClick={() => handleEdit(matricula.id)}
+                      >
+                        <i className="ri-edit-line" />
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xl text-danger-600 remove-btn"
+                        onClick={() => handleDelete(matricula.id)}
+                      >
+                        <i className="ri-delete-bin-6-line" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MatriculasLayout;

@@ -933,8 +933,7 @@ const CadastroMatricula = ({
                                                             horarioFim: e.target.value,
                                                         })
                                                     }
-                                                    className="form-control"
-                                                    placeholder="Horário de término"
+                                                    className="form-control                                                    placeholder="Horário de término"
                                                 />
                                             </Col>
                                         </Row>

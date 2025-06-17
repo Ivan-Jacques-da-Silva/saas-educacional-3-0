@@ -320,3 +320,146 @@ const TurmaLayout = () => {
 };
 
 export default TurmaLayout;
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { API_BASE_URL_NEW } from "../config/api";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const TurmaLayout = () => {
+  const [turmas, setTurmas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchTurmas();
+  }, []);
+
+  const fetchTurmas = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL_NEW}/turmas`);
+      setTurmas(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Erro ao buscar turmas:", error);
+      toast.error("Erro ao carregar turmas");
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (turmaId) => {
+    navigate(`/cadastro-turma/${turmaId}`);
+  };
+
+  const handleDelete = async (turmaId) => {
+    if (window.confirm("Tem certeza que deseja excluir esta turma?")) {
+      try {
+        await axios.delete(`${API_BASE_URL_NEW}/turmas/${turmaId}`);
+        toast.success("Turma excluída com sucesso");
+        fetchTurmas();
+      } catch (error) {
+        console.error("Erro ao excluir turma:", error);
+        toast.error("Erro ao excluir turma");
+      }
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
+  };
+
+  if (loading) {
+    return <div>Carregando...</div>;
+  }
+
+  return (
+    <div className="card h-100 p-0 radius-12">
+      <ToastContainer />
+      <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
+        <h6 className="text-lg fw-semibold mb-0">Lista de Turmas</h6>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => navigate("/cadastro-turma")}
+        >
+          Nova Turma
+        </button>
+      </div>
+      <div className="card-body p-24">
+        <div className="table-responsive scroll-sm">
+          <table className="table bordered-table sm-table mb-0">
+            <thead>
+              <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Data</th>
+                <th scope="col">Professor</th>
+                <th scope="col">Escola</th>
+                <th scope="col">Curso</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {turmas.map((turma) => (
+                <tr key={turma.id}>
+                  <td>
+                    <div className="d-flex align-items-center">
+                      <span className="text-md mb-0 fw-normal text-secondary-light">
+                        {turma.nome}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {formatDate(turma.data)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {turma.professor?.nome || "Não informado"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {turma.escola?.nome || "Não informado"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="text-md mb-0 fw-normal text-secondary-light">
+                      {turma.curso?.titulo || "Não informado"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge ${turma.status === 'ativo' ? 'text-success-600 bg-success-100' : 'text-danger-600 bg-danger-100'}`}>
+                      {turma.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="d-flex align-items-center justify-content-center gap-10">
+                      <button
+                        type="button"
+                        className="text-xl text-success-600"
+                        onClick={() => handleEdit(turma.id)}
+                      >
+                        <i className="ri-edit-line" />
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xl text-danger-600 remove-btn"
+                        onClick={() => handleDelete(turma.id)}
+                      >
+                        <i className="ri-delete-bin-6-line" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TurmaLayout;

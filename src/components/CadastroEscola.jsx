@@ -120,9 +120,11 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
         }
 
         try {
+            let response;
+
             if (escolaId) {
-                // Modo de edição
-                const response = await axios.put(`${API_BASE_URL_NEW}/escolas/${escolaId}`, escolaData, {
+                // Modo edição
+                response = await axios.put(`${API_BASE_URL_NEW}/escolas/${escolaId}`, escolaData, {
                     headers: { "Content-Type": "application/json" },
                 });
 
@@ -135,7 +137,7 @@ const CadastroEscolaModal = ({ escolaId, isModal = false, onClose = null, onEsco
                 }
             } else {
                 // Modo de cadastro
-                const response = await axios.post(`${API_BASE_URL_NEW}/escolas`, escolaData, {
+                response = await axios.post(`${API_BASE_URL_NEW}/escolas`, escolaData, {
                     headers: { "Content-Type": "application/json" },
                 });
 

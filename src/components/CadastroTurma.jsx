@@ -207,6 +207,11 @@ const CadastroTurmaModal = ({ turmaID }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!turmaData.cp_tr_nome || !turmaData.cp_tr_data) {
+      setMensagem({ tipo: "erro", texto: "Por favor, preencha todos os campos obrigatórios." });
+      return;
+    }
+
     try {
       const dataToSend = {
         cp_tr_nome: turmaData.cp_tr_nome,
@@ -431,7 +436,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
             {turmaID ? "Salvar Alterações" : "Cadastrar Turma"}
           </Button>
         </div>
-      
+
       {/* Modal de Confirmação */}
       <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
         <Modal.Header closeButton>
