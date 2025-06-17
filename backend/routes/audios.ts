@@ -137,7 +137,9 @@ router.post('/audios', upload.array('audios'), async (req: Request, res: Respons
         categoria,
         duracao,
         status: status || 'ativo',
-        arquivo: req.files && req.files.length > 0 ? JSON.stringify(req.files.map((f: any) => f.filename)) : null
+        arquivo: Array.isArray(req.files) && req.files.length > 0
+          ? JSON.stringify(req.files.map((f: any) => f.filename))
+          : null
       },
       include: {
         usuario: {
@@ -189,7 +191,7 @@ router.put('/audios/:id', upload.array('audios'), async (req: Request, res: Resp
       status: status || 'ativo'
     };
 
-    if (req.files && req.files.length > 0) {
+    if (Array.isArray(req.files) && req.files.length > 0) {
       updateData.arquivo = JSON.stringify(req.files.map((f: any) => f.filename));
     }
 
