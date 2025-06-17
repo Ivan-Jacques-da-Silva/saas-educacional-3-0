@@ -1,5 +1,3 @@
-
-
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
@@ -50,7 +48,7 @@ const logError = (route: string, error: any, req: Request | null = null) => {
   }
 };
 
-// Buscar todas as turmas
+// Rotas para Turmas
 router.get('/turmas', async (req: Request, res: Response) => {
   try {
     const turmas = await prisma.turma.findMany({
@@ -85,7 +83,6 @@ router.get('/turmas', async (req: Request, res: Response) => {
   }
 });
 
-// Buscar turma por ID
 router.get('/turmas/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -126,7 +123,6 @@ router.get('/turmas/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Cadastrar nova turma
 router.post('/register-turma', async (req: Request, res: Response) => {
   try {
     const {
@@ -206,7 +202,6 @@ router.post('/register-turma', async (req: Request, res: Response) => {
   }
 });
 
-// Atualizar turma
 router.put('/update-turma/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -270,7 +265,6 @@ router.put('/update-turma/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Excluir turma
 router.delete('/turmas/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -316,4 +310,3 @@ router.get('/users-professores', async (req: Request, res: Response) => {
 });
 
 export default router;
-

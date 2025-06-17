@@ -1,3 +1,4 @@
+
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
@@ -6,6 +7,19 @@ import fs from 'fs';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Configuração do Multer para upload de áudios
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // Função para logging de erros
 const logError = (route: string, error: any, req: Request | null = null) => {
@@ -29,9 +43,6 @@ const logError = (route: string, error: any, req: Request | null = null) => {
 
   try {
     // Log simples
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
     fs.appendFileSync(logFile, logString);
 
     // Log detalhado
@@ -49,20 +60,7 @@ const logError = (route: string, error: any, req: Request | null = null) => {
   }
 };
 
-// Configuração do Multer para upload de arquivos
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage });
-
-// Buscar todos os áudios
+// Rotas para Áudios
 router.get('/audios', async (req: Request, res: Response) => {
   try {
     const audios = await prisma.audio.findMany({
@@ -75,7 +73,7 @@ router.get('/audios', async (req: Request, res: Response) => {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { titulo: 'asc' }
     });
     res.json(audios);
   } catch (error) {
@@ -85,7 +83,6 @@ router.get('/audios', async (req: Request, res: Response) => {
   }
 });
 
-// Buscar áudio por ID
 router.get('/audios/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -114,8 +111,7 @@ router.get('/audios/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Cadastrar novo áudio
-router.post('/audios', upload.array('audios'), async (req: Request, res: Response) => {
+router.post('/audios', upload.single('arquivo'), async (req: Request, res: Response) => {
   try {
     const {
       titulo,
@@ -123,10 +119,17 @@ router.post('/audios', upload.array('audios'), async (req: Request, res: Respons
       usuarioId,
       categoria,
       duracao,
-      status,
-      linkYoutube,
-      pdfs
+      status
     } = req.body;
+
+    // Verificar se áudio já existe
+    const existingAudio = await prisma.audio.findFirst({
+      where: { titulo: titulo }
+    });
+
+    if (existingAudio) {
+      return res.json({ exists: true, message: 'Áudio já cadastrado' });
+    }
 
     // Criar áudio
     const newAudio = await prisma.audio.create({
@@ -137,9 +140,7 @@ router.post('/audios', upload.array('audios'), async (req: Request, res: Respons
         categoria,
         duracao,
         status: status || 'ativo',
-        arquivo: Array.isArray(req.files) && req.files.length > 0
-          ? JSON.stringify(req.files.map((f: any) => f.filename))
-          : null
+        arquivo: req.file ? req.file.filename : null
       },
       include: {
         usuario: {
@@ -160,8 +161,7 @@ router.post('/audios', upload.array('audios'), async (req: Request, res: Respons
   }
 });
 
-// Atualizar áudio
-router.put('/audios/:id', upload.array('audios'), async (req: Request, res: Response) => {
+router.put('/audios/:id', upload.single('arquivo'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -191,8 +191,8 @@ router.put('/audios/:id', upload.array('audios'), async (req: Request, res: Resp
       status: status || 'ativo'
     };
 
-    if (Array.isArray(req.files) && req.files.length > 0) {
-      updateData.arquivo = JSON.stringify(req.files.map((f: any) => f.filename));
+    if (req.file) {
+      updateData.arquivo = req.file.filename;
     }
 
     const updatedAudio = await prisma.audio.update({
@@ -209,7 +209,7 @@ router.put('/audios/:id', upload.array('audios'), async (req: Request, res: Resp
       }
     });
 
-    res.json({ message: 'Áudio atualizado com sucesso', audio: updatedAudio });
+    res.json(updatedAudio);
   } catch (error) {
     logError(`PUT /audios/${req.params.id}`, error, req);
     console.error('Erro ao atualizar áudio:', error);
@@ -217,7 +217,6 @@ router.put('/audios/:id', upload.array('audios'), async (req: Request, res: Resp
   }
 });
 
-// Excluir áudio
 router.delete('/audios/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
