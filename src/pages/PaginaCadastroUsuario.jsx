@@ -1,18 +1,23 @@
 import React from "react";
-import { useParams } from "react-router-dom"; 
-import MasterLayout from "../masterLayout/MasterLayout";
-import Breadcrumb from "../components/Breadcrumb";
-import CadastroUsuario from "../components/CadastroUsuario";
+import { useParams } from "react-router-dom";
+import MasterLayout from "../masterLayout/MasterLayout.jsx";
+import Breadcrumb from "../components/Breadcrumb.jsx";
+import CadastroUsuario from "../components/CadastroUsuario.jsx";
 
 const PaginaCadastroUsuario = () => {
-  const { id } = useParams(); // Captura o ID da URL
-  console.log("ID capturado:", id); // Verifica se o ID está sendo capturado corretamente
+  const { id } = useParams();
 
   return (
-    <MasterLayout>
-      <Breadcrumb title={id ? "Editar Usuário" : "Cadastro de Usuário"} />
-      <CadastroUsuario userId={id || null} />
-    </MasterLayout>
+    <>
+      {/* MasterLayout */}
+      <MasterLayout>
+        {/* Breadcrumb */}
+        <Breadcrumb title={id ? "Editar Usuário" : "Cadastro de Usuário"} />
+
+        {/* CadastroUsuario */}
+        <CadastroUsuario usuarioId={id} />
+      </MasterLayout>
+    </>
   );
 };
 

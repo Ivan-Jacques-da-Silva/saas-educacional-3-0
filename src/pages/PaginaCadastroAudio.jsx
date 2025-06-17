@@ -5,12 +5,19 @@ import Breadcrumb from "../components/Breadcrumb.jsx";
 import CadastroAudio from "../components/CadastroAudio.jsx";
 
 const PaginaCadastroAudio = () => {
-  const { id } = useParams(); // Captura o ID da URL
+  const { id } = useParams();
+
   return (
-    <MasterLayout>
-      <Breadcrumb title={id ? "Editar Áudio" : "Cadastro de Áudio"} />
-      <CadastroAudio audioID={id || null} />
-    </MasterLayout>
+    <>
+      {/* MasterLayout */}
+      <MasterLayout>
+        {/* Breadcrumb */}
+        <Breadcrumb title={id ? "Editar Áudio" : "Cadastro de Áudio"} />
+
+        {/* CadastroAudio */}
+        <CadastroAudio audioId={id} />
+      </MasterLayout>
+    </>
   );
 };
 

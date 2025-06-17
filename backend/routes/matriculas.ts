@@ -64,6 +64,12 @@ router.get('/matriculas', async (req: Request, res: Response) => {
             id: true,
             nome: true
           }
+        },
+        curso: {
+          select: {
+            id: true,
+            titulo: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' }

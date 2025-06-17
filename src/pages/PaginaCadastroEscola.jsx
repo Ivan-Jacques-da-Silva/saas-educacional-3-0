@@ -1,16 +1,23 @@
 import React from "react";
 import { useParams } from "react-router-dom";
-import MasterLayout from "../masterLayout/MasterLayout";
-import Breadcrumb from "../components/Breadcrumb";
-import CadastroEscolaModal from "../components/CadastroEscola";
+import MasterLayout from "../masterLayout/MasterLayout.jsx";
+import Breadcrumb from "../components/Breadcrumb.jsx";
+import CadastroEscola from "../components/CadastroEscola.jsx";
 
 const PaginaCadastroEscola = () => {
-  const { escolaId } = useParams();
+  const { id } = useParams();
+
   return (
-    <MasterLayout>
-      <Breadcrumb title={escolaId ? "Editar Escola" : "Cadastro de Escola"} />
-      <CadastroEscolaModal escolaId={escolaId || null} />
-    </MasterLayout>
+    <>
+      {/* MasterLayout */}
+      <MasterLayout>
+        {/* Breadcrumb */}
+        <Breadcrumb title={id ? "Editar Escola" : "Cadastro de Escola"} />
+
+        {/* CadastroEscola */}
+        <CadastroEscola escolaId={id} />
+      </MasterLayout>
+    </>
   );
 };
 

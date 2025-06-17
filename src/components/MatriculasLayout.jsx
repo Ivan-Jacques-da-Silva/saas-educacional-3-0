@@ -155,18 +155,11 @@ const MatriculasLayout = () => {
                     <table className="table bordered-table sm-table mb-0">
                         <thead>
                             <tr>
-                                <th scope="col">
-                                    <div className="d-flex align-items-center gap-10">
-                                        <div className="form-check style-check d-flex align-items-center">
-                                            <input className="form-check-input radius-4 border border-neutral-400" type="checkbox" />
-                                        </div>
-                                        S.L
-                                    </div>
-                                </th>
                                 <th scope="col">Aluno</th>
                                 <th scope="col">Escola</th>
-                                <th scope="col">Valor Curso</th>
-                                <th scope="col">Tipo Cobrança</th>
+                                <th scope="col">Curso</th>
+                                <th scope="col">Nível</th>
+                                <th scope="col">Horário</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Data Cadastro</th>
                                 <th scope="col" className="text-center">Ação</th>
@@ -182,14 +175,6 @@ const MatriculasLayout = () => {
                             ) : (
                                 matriculas.map((matricula, index) => (
                                     <tr key={matricula.id}>
-                                        <td>
-                                            <div className="d-flex align-items-center gap-10">
-                                                <div className="form-check style-check d-flex align-items-center">
-                                                    <input className="form-check-input radius-4 border border-neutral-400" type="checkbox" />
-                                                </div>
-                                                {index + 1}
-                                            </div>
-                                        </td>
                                         <td>
                                             <div className="d-flex align-items-center">
                                                 <div>
@@ -209,25 +194,34 @@ const MatriculasLayout = () => {
                                         </td>
                                         <td>
                                             <span className="text-md mb-0 fw-medium text-secondary-light">
-                                                {formatCurrency(matricula.valorCurso)}
+                                                {matricula.curso?.titulo || 'N/A'}
                                             </span>
                                         </td>
                                         <td>
-                                            <span className={`py-4 px-16 radius-4 text-sm fw-medium ${
-                                                matricula.tipoCobranca === 'parcelado' 
-                                                    ? 'text-info-600 bg-info-100' 
-                                                    : 'text-success-600 bg-success-100'
-                                            }`}>
-                                                {matricula.tipoCobranca === 'parcelado' ? 'Parcelado' : 'À Vista'}
+                                            <span className="text-md mb-0 fw-medium text-secondary-light">
+                                                {matricula.nivelIdioma || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="text-md mb-0 fw-medium text-secondary-light">
+                                                {matricula.horarioInicio && matricula.horarioFim 
+                                                    ? `${matricula.horarioInicio} - ${matricula.horarioFim}` 
+                                                    : 'N/A'}
                                             </span>
                                         </td>
                                         <td>
                                             <span className={`py-4 px-16 radius-4 text-sm fw-medium ${
                                                 matricula.status === 'ativo' 
                                                     ? 'text-success-600 bg-success-100' 
+                                                    : matricula.status === 'trancado'
+                                                    ? 'text-warning-600 bg-warning-100'
+                                                    : matricula.status === 'concluido'
+                                                    ? 'text-info-600 bg-info-100'
                                                     : 'text-danger-600 bg-danger-100'
                                             }`}>
-                                                {matricula.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                                                {matricula.status === 'ativo' ? 'Ativo' : 
+                                                 matricula.status === 'trancado' ? 'Trancado' :
+                                                 matricula.status === 'concluido' ? 'Concluído' : 'Cancelado'}
                                             </span>
                                         </td>
                                         <td>
