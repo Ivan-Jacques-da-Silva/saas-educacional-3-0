@@ -88,9 +88,9 @@ model Matricula {
   contatoMae            String?   @map("cp_mt_contato_mae")
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
+  curso                 Curso?    @relation(fields: [cursoId], references: [id])
   escola                Escola?   @relation(fields: [escolaId], references: [id])
   usuario               User      @relation(fields: [usuarioId], references: [id])
-  curso                 Curso?    @relation(fields: [cursoId], references: [id])
 
   @@map("matriculas")
 }
@@ -111,8 +111,8 @@ model Curso {
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
   instrutor      User?       @relation("CursoInstrutor", fields: [instrutorId], references: [id])
-  turmas         Turma[]
   matriculas     Matricula[]
+  turmas         Turma[]
 
   @@map("cursos")
 }

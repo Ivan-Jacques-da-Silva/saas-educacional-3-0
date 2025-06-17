@@ -42,7 +42,6 @@ const logError = (route: string, error: any, req: Request | null = null) => {
     existingLogs.push(logEntry);
     fs.writeFileSync(detailedLogFile, JSON.stringify(existingLogs, null, 2));
   } catch (logErr) {
-    console.error('Erro ao escrever log:', logErr);
   }
 };
 
@@ -77,7 +76,6 @@ router.get('/matriculas', async (req: Request, res: Response) => {
     res.json(matriculas);
   } catch (error) {
     logError('GET /matriculas', error, req);
-    console.error('Erro ao buscar matrículas:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
@@ -120,7 +118,6 @@ router.get('/matriculas/:id', async (req: Request, res: Response) => {
     res.json(matricula);
   } catch (error) {
     logError(`GET /matriculas/${req.params.id}`, error, req);
-    console.error('Erro ao buscar matrícula:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
@@ -204,7 +201,6 @@ router.post('/matriculas', async (req: Request, res: Response) => {
     res.status(201).json({ message: 'Matrícula cadastrada com sucesso', matricula: newMatricula });
   } catch (error) {
     logError('POST /matriculas', error, req);
-    console.error('Erro ao criar matrícula:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
@@ -289,7 +285,6 @@ router.put('/matriculas/:id', async (req: Request, res: Response) => {
     res.json({ message: 'Matrícula atualizada com sucesso', matricula: updatedMatricula });
   } catch (error) {
     logError(`PUT /matriculas/${req.params.id}`, error, req);
-    console.error('Erro ao atualizar matrícula:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
@@ -305,7 +300,6 @@ router.delete('/matriculas/:id', async (req: Request, res: Response) => {
     res.json({ message: 'Matrícula excluída com sucesso' });
   } catch (error) {
     logError(`DELETE /matriculas/${req.params.id}`, error, req);
-    console.error('Erro ao excluir matrícula:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
