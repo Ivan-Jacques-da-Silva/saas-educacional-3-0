@@ -13,8 +13,9 @@ import { useNavigate } from "react-router-dom";
 
 
 // const CadastroUsuarioModal = ({ closeModal, escolas = [] }) => {
-const CadastroUsuarioModal = ({ userId }) => {
-    // const { id } = useParams();
+const CadastroUsuarioModal = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
     const navigate = useNavigate();
 
     const [userData, setUserData] = useState({
