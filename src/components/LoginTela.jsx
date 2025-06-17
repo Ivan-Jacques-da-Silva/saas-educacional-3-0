@@ -36,27 +36,18 @@ const LoginTela = () => {
             console.log('Resposta recebida:', response.data);
             setIsLoggingIn(true);
 
-            if (response.data.msg === 'Usuário Logado com sucesso') {
-                // console.log('Entrou no if: Usuário Logado com sucesso');
-                // Armazenar o tipo de usuário após o login bem-sucedido
-                localStorage.setItem('userType', response.data.userType);
-                localStorage.setItem('userName', response.data.userName);
-                localStorage.setItem('userId', response.data.userId);
-                localStorage.setItem('userProfilePhoto', response.data.userProfilePhoto);
-                localStorage.setItem('schoolId', response.data.schoolId);
-                localStorage.setItem('turmaID', response.data.turmaID);
+            if (response.data.success && response.data.user) {
+                localStorage.setItem('userData', JSON.stringify(response.data.user));
 
-                if (response.data.userType === 5) {
+                // Redirecionar baseado no tipo de usuário
+                if (response.data.user.tipoUser === 5) {
                     navigate('/home/');
                 } else {
                     navigate('/home');
                 }
-            } else if (response.data.msg == 'Usuário ou senha incorretos') {
-                // console.log('Entrou no else if: Usuário ou senha incorretos');
-                toast.error(response.data.msg);
-                setLoginError(true);
             } else {
-                console.log('Entrou no else: Nenhum dos ifs foi atendido');
+                toast.error('Usuário ou senha incorretos');
+                setLoginError(true);
             }
         } catch (error) {
             if (error.response) {
