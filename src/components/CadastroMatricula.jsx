@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import InputMask from "react-input-mask";
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "../config/api";
 import { ToastContainer, toast } from "react-toastify";
 import { Form, Row, Col, Button, Modal } from "react-bootstrap";
 import './modal.css'
