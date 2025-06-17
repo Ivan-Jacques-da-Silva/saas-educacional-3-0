@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { API_BASE_URL_NEW } from './config';
 
 const MatriculasLayout = () => {
@@ -137,10 +138,10 @@ const MatriculasLayout = () => {
                     </select>
                     <span className="text-md fw-medium text-secondary-light mb-0">de {matriculas.length} matrículas</span>
                 </div>
-                <a href="/cadastro-matricula" className="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2">
+                <Link to="/cadastro-matricula" className="btn btn-primary text-sm btn-sm px-12 py-12 radius-8 d-flex align-items-center gap-2">
                     <i className="ri-add-line"></i>
                     Nova Matrícula
-                </a>
+                </Link>
             </div>
 
             <div className="card-body p-24">
@@ -236,12 +237,12 @@ const MatriculasLayout = () => {
                                         </td>
                                         <td className="text-center">
                                             <div className="d-flex align-items-center gap-10 justify-content-center">
-                                                <a 
-                                                    href={`/cadastro-matricula/${matricula.id}`}
+                                                <Link 
+                                                    to={`/cadastro-matricula/${matricula.id}`}
                                                     className="bg-success-100 text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"
                                                 >
                                                     <i className="ri-edit-line"></i>
-                                                </a>
+                                                </Link>
                                                 <button
                                                     onClick={() => handleDelete(matricula.id)}
                                                     className="bg-danger-100 text-danger-600 bg-hover-danger-200 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle border-0"
