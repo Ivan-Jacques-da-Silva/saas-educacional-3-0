@@ -68,6 +68,7 @@ model Matricula {
   id                    Int       @id @default(autoincrement()) @map("cp_mt_id")
   usuarioId             Int       @map("cp_mt_usuario_id")
   escolaId              Int?      @map("cp_mt_escola_id")
+  cursoId               Int?      @map("cp_mt_curso_id")
   valorCurso            Float     @map("cp_mt_valor_curso")
   numeroParcelas        Int?      @map("cp_mt_numero_parcelas")
   valorParcela          Float?    @map("cp_mt_valor_parcela")
@@ -89,27 +90,29 @@ model Matricula {
   updatedAt             DateTime  @updatedAt @map("updated_at")
   escola                Escola?   @relation(fields: [escolaId], references: [id])
   usuario               User      @relation(fields: [usuarioId], references: [id])
+  curso                 Curso?    @relation(fields: [cursoId], references: [id])
 
   @@map("matriculas")
 }
 
 model Curso {
-  id             Int      @id @default(autoincrement()) @map("cp_cr_id")
-  titulo         String   @map("cp_cr_titulo")
-  descricao      String?  @map("cp_cr_descricao")
-  instrutorId    Int?     @map("cp_cr_instrutor_id")
-  categoria      String?  @map("cp_cr_categoria")
-  nivel          String?  @map("cp_cr_nivel")
-  duracao        String?  @map("cp_cr_duracao")
-  preco          Float?   @map("cp_cr_preco")
-  status         String   @default("ativo") @map("cp_cr_status")
-  dataPublicacao DateTime @default(now()) @map("cp_cr_data_publicacao")
-  tags           String?  @map("cp_cr_tags")
-  arquivo        String?  @map("cp_cr_arquivo")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-  instrutor      User?    @relation("CursoInstrutor", fields: [instrutorId], references: [id])
+  id             Int         @id @default(autoincrement()) @map("cp_cr_id")
+  titulo         String      @map("cp_cr_titulo")
+  descricao      String?     @map("cp_cr_descricao")
+  instrutorId    Int?        @map("cp_cr_instrutor_id")
+  categoria      String?     @map("cp_cr_categoria")
+  nivel          String?     @map("cp_cr_nivel")
+  duracao        String?     @map("cp_cr_duracao")
+  preco          Float?      @map("cp_cr_preco")
+  status         String      @default("ativo") @map("cp_cr_status")
+  dataPublicacao DateTime    @default(now()) @map("cp_cr_data_publicacao")
+  tags           String?     @map("cp_cr_tags")
+  arquivo        String?     @map("cp_cr_arquivo")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  instrutor      User?       @relation("CursoInstrutor", fields: [instrutorId], references: [id])
   turmas         Turma[]
+  matriculas     Matricula[]
 
   @@map("cursos")
 }

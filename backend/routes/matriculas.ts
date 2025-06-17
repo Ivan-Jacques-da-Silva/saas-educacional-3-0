@@ -130,6 +130,7 @@ router.post('/matriculas', async (req: Request, res: Response) => {
     const {
       usuarioId,
       escolaId,
+      cursoId,
       valorCurso,
       numeroParcelas,
       valorParcela,
@@ -163,6 +164,7 @@ router.post('/matriculas', async (req: Request, res: Response) => {
       data: {
         usuarioId: parseInt(usuarioId),
         escolaId: escolaId ? parseInt(escolaId) : null,
+        cursoId: cursoId ? parseInt(cursoId) : null,
         valorCurso: parseFloat(valorCurso),
         numeroParcelas: numeroParcelas ? parseInt(numeroParcelas) : null,
         valorParcela: valorParcela ? parseFloat(valorParcela) : null,
@@ -213,6 +215,7 @@ router.put('/matriculas/:id', async (req: Request, res: Response) => {
     const {
       usuarioId,
       escolaId,
+      cursoId,
       valorCurso,
       numeroParcelas,
       valorParcela,
@@ -246,6 +249,7 @@ router.put('/matriculas/:id', async (req: Request, res: Response) => {
       data: {
         usuarioId: parseInt(usuarioId),
         escolaId: escolaId ? parseInt(escolaId) : null,
+        cursoId: cursoId ? parseInt(cursoId) : null,
         valorCurso: parseFloat(valorCurso),
         numeroParcelas: numeroParcelas ? parseInt(numeroParcelas) : null,
         valorParcela: valorParcela ? parseFloat(valorParcela) : null,
