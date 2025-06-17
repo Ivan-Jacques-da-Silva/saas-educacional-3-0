@@ -43,6 +43,9 @@ const logError = (route: string, error: any, req: Request | null = null) => {
 
   try {
     // Log simples
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
     fs.appendFileSync(logFile, logString);
 
     // Log detalhado
