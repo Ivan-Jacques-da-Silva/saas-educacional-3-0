@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_BASE_URL_NEW, API_BASE_URL_OLD } from './config';
+import { API_BASE_URL_NEW } from './config';
 
 const Usuarios = () => {
     const [users, setUsers] = useState([]);
@@ -133,8 +133,6 @@ const Usuarios = () => {
         return matchesSchool && notDeleted && matchesSearch && matchesType && matchesBirthday;
     });
 
-
-
     const totalPaginas = Math.ceil(filteredUsers.length / usersPerPage);
 
     const paginasVisiveis = [];
@@ -235,12 +233,6 @@ const Usuarios = () => {
                                         <td>{user.dataNascimento ? new Date(user.dataNascimento).toLocaleDateString() : 'Data não disponível'}</td>
                                         <td>{mapUserType(user.tipoUser)}</td>
                                         <td className="text-center">
-                                            {/* <Link
-                                                to="#"
-                                                className="w-32-px h-32-px me-8 bg-primary-light text-primary-600 rounded-circle d-inline-flex align-items-center justify-content-center"
-                                            >
-                                                <Icon icon="iconamoon:eye-light" />
-                                            </Link> */}
                                             <Link
                                                 to={`/cadastro-usuario/${user.id}`}
                                                 className="w-32-px h-32-px me-8 bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -339,156 +331,3 @@ const Usuarios = () => {
 };
 
 export default Usuarios;
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_BASE_URL_NEW } from "../config/api";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
-const UsuarioLayout = () => {
-  const [usuarios, setUsuarios] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [userType, setUserType] = useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const userTypeFromStorage = localStorage.getItem("userType");
-    setUserType(parseInt(userTypeFromStorage, 10));
-    fetchUsuarios();
-  }, []);
-
-  const fetchUsuarios = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL_NEW}/users`);
-      setUsuarios(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
-      toast.error("Erro ao carregar usuários");
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = (userId) => {
-    navigate(`/cadastro-usuario/${userId}`);
-  };
-
-  const handleDelete = async (userId) => {
-    if (window.confirm("Tem certeza que deseja excluir este usuário?")) {
-      try {
-        await axios.delete(`${API_BASE_URL_NEW}/users/${userId}`);
-        toast.success("Usuário excluído com sucesso");
-        fetchUsuarios();
-      } catch (error) {
-        console.error("Erro ao excluir usuário:", error);
-        toast.error("Erro ao excluir usuário");
-      }
-    }
-  };
-
-  const getTipoUsuarioLabel = (tipo) => {
-    const tipos = {
-      1: "Gestor",
-      2: "Diretor", 
-      3: "Secretária",
-      4: "Professor",
-      5: "Aluno"
-    };
-    return tipos[tipo] || "Desconhecido";
-  };
-
-  if (loading) {
-    return <div>Carregando...</div>;
-  }
-
-  return (
-    <div className="card h-100 p-0 radius-12">
-      <ToastContainer />
-      <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
-        <h6 className="text-lg fw-semibold mb-0">Lista de Usuários</h6>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => navigate("/cadastro-usuario")}
-        >
-          Novo Usuário
-        </button>
-      </div>
-      <div className="card-body p-24">
-        <div className="table-responsive scroll-sm">
-          <table className="table bordered-table sm-table mb-0">
-            <thead>
-              <tr>
-                <th scope="col">Nome</th>
-                <th scope="col">Email</th>
-                <th scope="col">Login</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">CPF</th>
-                <th scope="col">Escola</th>
-                <th scope="col" className="text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuarios.map((usuario) => (
-                <tr key={usuario.id}>
-                  <td>
-                    <div className="d-flex align-items-center">
-                      <span className="text-md mb-0 fw-normal text-secondary-light">
-                        {usuario.nome}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {usuario.email}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {usuario.login}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {getTipoUsuarioLabel(usuario.tipoUser)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {usuario.cpf}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {usuario.escola?.nome || "Não informado"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="d-flex align-items-center justify-content-center gap-10">
-                      <button
-                        type="button"
-                        className="text-xl text-success-600"
-                        onClick={() => handleEdit(usuario.id)}
-                      >
-                        <i className="ri-edit-line" />
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xl text-danger-600 remove-btn"
-                        onClick={() => handleDelete(usuario.id)}
-                      >
-                        <i className="ri-delete-bin-6-line" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default UsuarioLayout;

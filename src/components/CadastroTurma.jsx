@@ -76,6 +76,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
 
   useEffect(() => {
     if (turmaID) {
+      // Correcting the API_BASE_URL here:
       axios.get(`${API_BASE_URL}/turmas/${turmaID}`)
         .then(async (response) => {
           if (response.data) {

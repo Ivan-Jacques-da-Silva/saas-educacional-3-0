@@ -176,12 +176,12 @@ const EscolasLayout = () => {
                                             )}
                                         </td>
                                         <td className="text-center">
-                                            <button
-                                                onClick={() => openEditModal(escola.id)}
+                                            <Link
+                                                to={`/cadastro-escola/${escola.id}`}
                                                 className="w-32-px h-32-px me-8 bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
                                             >
                                                 <Icon icon="lucide:edit" />
-                                            </button>
+                                            </Link>
 
                                             <button
                                                 onClick={() => abrirModalExclusao(escola.id)}
@@ -285,9 +285,9 @@ const EscolasLayout = () => {
                     <Modal.Title>{escolaDataToEdit ? "Editar Escola" : "Nova Escola"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <CadastroEscolaModal 
-                        escolaId={escolaDataToEdit?.id} 
-                        isModal={true} 
+                    <CadastroEscolaModal
+                        escolaId={escolaDataToEdit?.id}
+                        isModal={true}
                         onClose={closeModal}
                         onEscolaCreated={fetchEscolas}
                     />
@@ -313,143 +313,6 @@ const EscolasLayout = () => {
             </Modal>
         </div>
     );
-};
-
-export default EscolasLayout;
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { API_BASE_URL_NEW } from "../config/api";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-
-const EscolasLayout = () => {
-  const [escolas, setEscolas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchEscolas();
-  }, []);
-
-  const fetchEscolas = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL_NEW}/escolas`);
-      setEscolas(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Erro ao buscar escolas:", error);
-      toast.error("Erro ao carregar escolas");
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = (escolaId) => {
-    navigate(`/cadastro-escola/${escolaId}`);
-  };
-
-  const handleDelete = async (escolaId) => {
-    if (window.confirm("Tem certeza que deseja excluir esta escola?")) {
-      try {
-        await axios.delete(`${API_BASE_URL_NEW}/escolas/${escolaId}`);
-        toast.success("Escola excluída com sucesso");
-        fetchEscolas();
-      } catch (error) {
-        console.error("Erro ao excluir escola:", error);
-        toast.error("Erro ao excluir escola");
-      }
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
-
-  if (loading) {
-    return <div>Carregando...</div>;
-  }
-
-  return (
-    <div className="card h-100 p-0 radius-12">
-      <ToastContainer />
-      <div className="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
-        <h6 className="text-lg fw-semibold mb-0">Lista de Escolas</h6>
-        <button 
-          className="btn btn-primary" 
-          onClick={() => navigate("/cadastro-escola")}
-        >
-          Nova Escola
-        </button>
-      </div>
-      <div className="card-body p-24">
-        <div className="table-responsive scroll-sm">
-          <table className="table bordered-table sm-table mb-0">
-            <thead>
-              <tr>
-                <th scope="col">Nome</th>
-                <th scope="col">Cidade</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Responsável</th>
-                <th scope="col">Data Cadastro</th>
-                <th scope="col" className="text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {escolas.map((escola) => (
-                <tr key={escola.id}>
-                  <td>
-                    <div className="d-flex align-items-center">
-                      <span className="text-md mb-0 fw-normal text-secondary-light">
-                        {escola.nome}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {escola.cidade}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {escola.estado}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {escola.responsavel?.nome || "Não informado"}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="text-md mb-0 fw-normal text-secondary-light">
-                      {formatDate(escola.dataCadastro)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="d-flex align-items-center justify-content-center gap-10">
-                      <button
-                        type="button"
-                        className="text-xl text-success-600"
-                        onClick={() => handleEdit(escola.id)}
-                      >
-                        <i className="ri-edit-line" />
-                      </button>
-                      <button
-                        type="button"
-                        className="text-xl text-danger-600 remove-btn"
-                        onClick={() => handleDelete(escola.id)}
-                      >
-                        <i className="ri-delete-bin-6-line" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export default EscolasLayout;
