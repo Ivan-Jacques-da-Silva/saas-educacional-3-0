@@ -174,7 +174,7 @@ const CadastroMatricula = ({
                     const schoolId = localStorage.getItem("schoolId");
 
                     const usuariosFiltrados = response.data.filter(usuario =>
-                        (!schoolId || usuario.escolaId == schoolId) && usuario.tipoUser === "Aluno"
+                        usuario.tipoUser === 5 && usuario.escolaId === parseInt(schoolId)
                     );
 
                     setUsuarios(usuariosFiltrados);
@@ -563,7 +563,7 @@ const CadastroMatricula = ({
             setFilteredUsuarios(usuarios); // Se vazio, mostra todos
         } else {
             const filtrados = usuarios.filter(usuario =>
-                usuario.cp_nome.toLowerCase().includes(termoBusca)
+                usuario.nome.toLowerCase().includes(termoBusca)
             );
             setFilteredUsuarios(filtrados);
         }
@@ -577,17 +577,17 @@ const CadastroMatricula = ({
         setDadosUsuario(usuario);
         setMatriculaData(prevMatriculaData => ({
             ...prevMatriculaData,
-            usuarioId: usuario.cp_id,
-            nomeUsuario: usuario.cp_nome,
-            cpfUsuario: usuario.cp_cpf,
-            dataNascimento: usuario.cp_datanascimento,
-            profissao: usuario.cp_profissao,
-            estadoCivil: usuario.cp_estadocivil,
-            endereco: `${usuario.cp_end_cidade_estado}, ${usuario.cp_end_rua}, ${usuario.cp_end_num}`,
-            whatsapp: usuario.cp_whatsapp,
-            telefone: usuario.cp_telefone,
-            email: usuario.cp_email,
-            escolaId: usuario.cp_escola_id,
+            usuarioId: usuario.id,
+            nomeUsuario: usuario.nome,
+            cpfUsuario: usuario.cpf,
+            dataNascimento: usuario.dataNascimento,
+            profissao: usuario.profissao,
+            estadoCivil: usuario.estadoCivil,
+            endereco: `${usuario.endCidadeEstado}, ${usuario.endRua}, ${usuario.endNum}`,
+            whatsapp: usuario.whatsapp,
+            telefone: usuario.telefone,
+            email: usuario.email,
+            escolaId: usuario.escolaId,
         }));
         closeUserSearchModal(); // Fecha o modal após selecionar
     };
@@ -1187,7 +1187,7 @@ const CadastroMatricula = ({
                         {filteredUsuarios.length > 0 ? (
                             filteredUsuarios.map((usuario) => (
                                 <li
-                                    key={usuario.cp_id}
+                                    key={usuario.id}
                                     className="list-group-item list-group-item-action"
                                     onClick={() => {
                                         handleUsuarioSelect(usuario);
@@ -1195,7 +1195,7 @@ const CadastroMatricula = ({
                                     }}
                                     style={{ cursor: "pointer" }}
                                 >
-                                    {usuario.cp_nome} - {usuario.cp_cpf}
+                                    {usuario.nome} - {usuario.cpf}
                                 </li>
                             ))
                         ) : (

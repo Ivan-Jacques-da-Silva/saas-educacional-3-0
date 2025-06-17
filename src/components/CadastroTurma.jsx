@@ -54,9 +54,9 @@ const CadastroTurmaModal = ({ turmaID }) => {
   useEffect(() => {
     if (alunosPorEscola.length) {
       const alunosOrdenados = [...alunosPorEscola].sort((a, b) => {
-        const aNaTurma = turmaData.cp_tr_alunos.includes(a.cp_id) ? -1 : 1;
-        const bNaTurma = turmaData.cp_tr_alunos.includes(b.cp_id) ? -1 : 1;
-        return aNaTurma - bNaTurma || a.cp_nome.localeCompare(b.cp_nome);
+        const aNaTurma = turmaData.cp_tr_alunos.includes(a.id) ? -1 : 1;
+        const bNaTurma = turmaData.cp_tr_alunos.includes(b.id) ? -1 : 1;
+        return aNaTurma - bNaTurma || a.nome.localeCompare(b.nome);
       });
       setAlunosFiltrados(alunosOrdenados);
     }
@@ -66,7 +66,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
   const fetchAlunosPorEscola = async (escolaId) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/users`);
-      const alunos = response.data.filter(user => user.tipoUser === "Aluno" && user.escolaId === escolaId)
+      const alunos = response.data.filter(user => user.tipoUser === 5 && user.escolaId === parseInt(escolaId))
       setAlunosPorEscola(alunos);
       setAlunosFiltrados(alunos);
     } catch (error) {
@@ -87,7 +87,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
             // Busca os alunos apenas uma vez
             const res = await axios.get(`${API_BASE_URL}/users`);
             const todosAlunos = res.data.filter(user => 
-              user.tipoUser === "Aluno" && user.escolaId == response.data.cp_tr_id_escola
+              user.tipoUser === 5 && user.escolaId === parseInt(response.data.cp_tr_id_escola)
             );
 
             if (todosAlunos.length > 0) {
@@ -103,7 +103,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
               const alunosOrdenados = [...todosAlunos].sort((a, b) => {
                 const aNaTurma = alunosIDs.includes(a.id) ? -1 : 1;
                 const bNaTurma = alunosIDs.includes(b.id) ? -1 : 1;
-                return aNaTurma - bNaTurma || a.cp_nome.localeCompare(b.cp_nome);
+                return aNaTurma - bNaTurma || a.nome.localeCompare(b.nome);
               });
 
               setAlunosPorEscola(todosAlunos);
@@ -165,7 +165,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
     setSearchTerm(e.target.value);
 
     const alunosFiltrados = alunosPorEscola.filter(aluno =>
-      normalizeString(aluno.cp_nome).includes(searchValue)
+      normalizeString(aluno.nome).includes(searchValue)
     );
 
     setAlunosFiltrados(alunosFiltrados);
@@ -412,7 +412,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
                             .filter(aluno => turmaData.cp_tr_alunos.includes(aluno.id))
                             .map(aluno => (
                               <span key={aluno.id} className="badge bg-primary me-1 mb-1">
-                                {aluno.cp_nome}
+                                {aluno.nome}
                               </span>
                             ))
                           }
@@ -486,7 +486,7 @@ const CadastroTurmaModal = ({ turmaID }) => {
                           onChange={(e) => handleCheckboxChange(e, aluno.id)}
                         />
                       </td>
-                      <td>{aluno.cp_nome}</td>
+                      <td>{aluno.nome}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -53,7 +53,7 @@ const Usuarios = () => {
             if (shouldFilterBySchool()) {
                 const schoolId = getUserSchoolId();
                 if (schoolId) {
-                    filteredData = data.filter(user => user.cp_escola_id === parseInt(schoolId));
+                    filteredData = data.filter(user => user.escolaId === parseInt(schoolId));
                 }
             }
 
@@ -124,11 +124,11 @@ const Usuarios = () => {
 
     const filteredUsers = users.filter((user) => {
         const isAdmin = userType === 1; // Se userType for 1, pode ver todos os usuários
-        const matchesSchool = isAdmin || user.cp_escola_id === schoolId; // Admin vê todos, outros só da escola
-        const notDeleted = user.cp_excluido !== 1; // Não exibir usuários excluídos
-        const matchesSearch = user.cp_nome.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesType = !selectedUserType || mapUserType(user.cp_tipo_user) === selectedUserType;
-        const matchesBirthday = !showOnlyBirthdays || isBirthdaySoon(user.cp_datanascimento);
+        const matchesSchool = isAdmin || user.escolaId === schoolId; // Admin vê todos, outros só da escola
+        const notDeleted = user.excluido !== 1; // Não exibir usuários excluídos
+        const matchesSearch = !searchTerm || (user.nome && user.nome.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesType = !selectedUserType || mapUserType(user.tipoUser) === selectedUserType;
+        const matchesBirthday = !showOnlyBirthdays || (user.dataNascimento && isBirthdaySoon(user.dataNascimento));
 
         return matchesSchool && notDeleted && matchesSearch && matchesType && matchesBirthday;
     });
@@ -225,15 +225,15 @@ const Usuarios = () => {
                                 </tr>
                             ) : (
                                 currentUsers.map((user) => (
-                                    <tr key={user.cp_id}>
+                                    <tr key={user.id}>
                                         <td>
-                                            {user.cp_nome}{" "}
-                                            {isBirthdaySoon(user.cp_datanascimento) && (
+                                            {user.nome || 'Nome não disponível'}{" "}
+                                            {user.dataNascimento && isBirthdaySoon(user.dataNascimento) && (
                                                 <Icon icon="fa-solid:gift" className="text-primary ms-2" />
                                             )}
                                         </td>
-                                        <td>{new Date(user.cp_datanascimento).toLocaleDateString()}</td>
-                                        <td>{mapUserType(user.cp_tipo_user)}</td>
+                                        <td>{user.dataNascimento ? new Date(user.dataNascimento).toLocaleDateString() : 'Data não disponível'}</td>
+                                        <td>{mapUserType(user.tipoUser)}</td>
                                         <td className="text-center">
                                             {/* <Link
                                                 to="#"
@@ -242,7 +242,7 @@ const Usuarios = () => {
                                                 <Icon icon="iconamoon:eye-light" />
                                             </Link> */}
                                             <Link
-                                                to={`/cadastro-usuario/${user.cp_id}`}
+                                                to={`/cadastro-usuario/${user.id}`}
                                                 className="w-32-px h-32-px me-8 bg-success-focus text-success-main rounded-circle d-inline-flex align-items-center justify-content-center"
                                             >
                                                 <Icon icon="lucide:edit" />
@@ -250,7 +250,7 @@ const Usuarios = () => {
                                             <Link
                                                 to="#"
                                                 className="w-32-px h-32-px me-8 bg-danger-focus text-danger-main rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                onClick={() => handleDelete(user.cp_id)}
+                                                onClick={() => handleDelete(user.id)}
                                             >
                                                 <Icon icon="mingcute:delete-2-line" />
                                             </Link>
