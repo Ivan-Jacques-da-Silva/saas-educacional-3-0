@@ -1,476 +1,323 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { API_BASE_URL } from "./config";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { Row, Col, Button, Form, Table, Modal } from "react-bootstrap";
-import { FaSearch } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { API_BASE_URL_NEW } from './config';
 
-const CadastroTurmaModal = ({ turmaID }) => {
-  console.log("Prop turmaID recebida:", turmaID);
-  const [turmaData, setTurmaData] = useState({
-    cp_tr_nome: "",
-    cp_tr_data: "",
-    cp_tr_id_professor: "",
-    cp_tr_id_escola: "",
-    cp_tr_alunos: [],
-    cp_tr_curso_id: "",
-    cp_tr_dias_semana: [],
-  });
-  useEffect(() => {
-    console.log("turmaID recebido:", turmaID);
-  }, [turmaID]);
+const CadastroTurma = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        cp_tr_nome: '',
+        cp_tr_data: '',
+        cp_tr_id_professor: '',
+        cp_tr_id_escola: '',
+        cp_tr_curso_id: '',
+        cp_tr_alunos: [],
+        cp_tr_dias_semana: []
+    });
+    const [professores, setProfessores] = useState([]);
+    const [escolas, setEscolas] = useState([]);
+    const [cursos, setCursos] = useState([]);
+    const [alunos, setAlunos] = useState([]);
+    const [isEdit, setIsEdit] = useState(false);
+    const [loading, setLoading] = useState(false);
 
+    const diasSemana = [
+        { value: 'segunda', label: 'Segunda-feira' },
+        { value: 'terca', label: 'Terça-feira' },
+        { value: 'quarta', label: 'Quarta-feira' },
+        { value: 'quinta', label: 'Quinta-feira' },
+        { value: 'sexta', label: 'Sexta-feira' },
+        { value: 'sabado', label: 'Sábado' },
+        { value: 'domingo', label: 'Domingo' }
+    ];
 
-  const [professores, setProfessores] = useState([]);
-  const [escolas, setEscolas] = useState([]);
-  const [alunosPorEscola, setAlunosPorEscola] = useState([]);
-  const [cursos, setCursos] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [alunosFiltrados, setAlunosFiltrados] = useState([]);
-  const [mensagem, setMensagem] = useState({ tipo: "", texto: "" });
-  const [showModal, setShowModal] = useState(false);
+    useEffect(() => {
+        fetchDependencies();
+        if (id) {
+            setIsEdit(true);
+            fetchTurma();
+        }
+    }, [id]);
 
+    const fetchDependencies = async () => {
+        try {
+            const [profResponse, escolasResponse, cursosResponse, alunosResponse] = await Promise.all([
+                fetch(`${API_BASE_URL_NEW}/users-professores`),
+                fetch(`${API_BASE_URL_NEW}/escolas`),
+                fetch(`${API_BASE_URL_NEW}/cursos`),
+                fetch(`${API_BASE_URL_NEW}/users`)
+            ]);
 
-  const handleShowModal = () => setShowModal(true);
-  const handleCloseModal = () => setShowModal(false);
+            if (profResponse.ok) {
+                const profData = await profResponse.json();
+                setProfessores(profData);
+            }
 
+            if (escolasResponse.ok) {
+                const escolasData = await escolasResponse.json();
+                setEscolas(escolasData);
+            }
 
-  useEffect(() => {
-    fetchProfessores();
-    fetchEscolas();
-    fetchCursos();
-  }, []);
+            if (cursosResponse.ok) {
+                const cursosData = await cursosResponse.json();
+                setCursos(cursosData);
+            }
 
-  // Só busca alunos se não for edição (turmaID inexistente)
-  useEffect(() => {
-    if (!turmaID && turmaData.cp_tr_id_escola) {
-      fetchAlunosPorEscola(turmaData.cp_tr_id_escola);
-    }
-  }, [turmaData.cp_tr_id_escola, turmaID]);
+            if (alunosResponse.ok) {
+                const alunosData = await alunosResponse.json();
+                const alunosFiltrados = alunosData.filter(user => user.tipoUser === 5);
+                setAlunos(alunosFiltrados);
+            }
+        } catch (error) {
+            console.error('Erro ao buscar dependências:', error);
+            toast.error('Erro ao carregar dados necessários');
+        }
+    };
 
-  // Reordena os alunos sempre que a lista ou os alunos selecionados mudarem
-  useEffect(() => {
-    if (alunosPorEscola.length) {
-      const alunosOrdenados = [...alunosPorEscola].sort((a, b) => {
-        const aNaTurma = turmaData.cp_tr_alunos.includes(a.cp_id) ? -1 : 1;
-        const bNaTurma = turmaData.cp_tr_alunos.includes(b.cp_id) ? -1 : 1;
-        return aNaTurma - bNaTurma || a.cp_nome.localeCompare(b.cp_nome);
-      });
-      setAlunosFiltrados(alunosOrdenados);
-    }
-  }, [turmaData.cp_tr_alunos, alunosPorEscola]);
+    const fetchTurma = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL_NEW}/turmas/${id}`);
+            if (response.ok) {
+                const turma = await response.json();
+                setFormData({
+                    cp_tr_nome: turma.nome || '',
+                    cp_tr_data: turma.data ? new Date(turma.data).toISOString().split('T')[0] : '',
+                    cp_tr_id_professor: turma.professorId || '',
+                    cp_tr_id_escola: turma.escolaId || '',
+                    cp_tr_curso_id: turma.cursoId || '',
+                    cp_tr_alunos: [],
+                    cp_tr_dias_semana: turma.diasSemana ? JSON.parse(turma.diasSemana) : []
+                });
+            }
+        } catch (error) {
+            console.error('Erro ao buscar turma:', error);
+            toast.error('Erro ao carregar dados da turma');
+        }
+    };
 
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
-  const fetchAlunosPorEscola = async (escolaId) => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/users`);
-      const alunos = response.data.filter(user => user.tipoUser === "Aluno" && user.escolaId === escolaId)
-      setAlunosPorEscola(alunos);
-      setAlunosFiltrados(alunos);
-    } catch (error) {
-      console.error("Erro ao buscar os alunos da escola:", error);
-    }
-  };
+    const handleDiasSemanaChange = (dia) => {
+        setFormData(prev => ({
+            ...prev,
+            cp_tr_dias_semana: prev.cp_tr_dias_semana.includes(dia)
+                ? prev.cp_tr_dias_semana.filter(d => d !== dia)
+                : [...prev.cp_tr_dias_semana, dia]
+        }));
+    };
 
-  useEffect(() => {
-    if (turmaID) {
-      axios.get(`${API_BASE_URL}/turmas/${turmaID}`)
-        .then(async (response) => {
-          if (response.data) {
-            setTurmaData({
-              ...response.data,
-              cp_tr_data: new Date(response.data.cp_tr_data).toISOString().split("T")[0],
+    const handleAlunosChange = (alunoId) => {
+        setFormData(prev => ({
+            ...prev,
+            cp_tr_alunos: prev.cp_tr_alunos.includes(alunoId)
+                ? prev.cp_tr_alunos.filter(id => id !== alunoId)
+                : [...prev.cp_tr_alunos, alunoId]
+        }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            const url = isEdit 
+                ? `${API_BASE_URL_NEW}/update-turma/${id}`
+                : `${API_BASE_URL_NEW}/register-turma`;
+
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
             });
 
-            // Busca os alunos apenas uma vez
-            const res = await axios.get(`${API_BASE_URL}/users`);
-            const todosAlunos = res.data.filter(user => 
-              user.tipoUser === "Aluno" && user.escolaId == response.data.cp_tr_id_escola
-            );
+            const data = await response.json();
 
-            if (todosAlunos.length > 0) {
-              const alunosDaTurma = todosAlunos.filter(aluno => aluno.turmaId == turmaID);
-              const alunosIDs = alunosDaTurma.map(aluno => aluno.id);
-
-              setTurmaData(prev => ({
-                ...prev,
-                cp_tr_alunos: alunosIDs
-              }));
-
-              // ✅ Ordenação correta para manter os alunos da turma no topo
-              const alunosOrdenados = [...todosAlunos].sort((a, b) => {
-                const aNaTurma = alunosIDs.includes(a.id) ? -1 : 1;
-                const bNaTurma = alunosIDs.includes(b.id) ? -1 : 1;
-                return aNaTurma - bNaTurma || a.cp_nome.localeCompare(b.cp_nome);
-              });
-
-              setAlunosPorEscola(todosAlunos);
-              setAlunosFiltrados(alunosOrdenados);
+            if (response.ok) {
+                if (data.exists) {
+                    toast.warning(data.message);
+                } else {
+                    toast.success(isEdit ? 'Turma atualizada com sucesso!' : 'Turma cadastrada com sucesso!');
+                    navigate('/turma');
+                }
+            } else {
+                toast.error(data.error || 'Erro ao salvar turma');
             }
-          }
-        })
-        .catch((error) => {
-          console.error("Erro ao buscar a turma:", error);
-          toast.error("Erro ao carregar dados da turma!");
-        });
-    }
-  }, [turmaID]);
+        } catch (error) {
+            console.error('Erro ao salvar turma:', error);
+            toast.error('Erro interno do servidor');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-
-
-  const fetchProfessores = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/users-professores`);
-      setProfessores(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar os professores:", error);
-    }
-  };
-
-  const fetchEscolas = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/escolas`);
-      setEscolas(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar as escolas:", error);
-    }
-  };
-
-  const fetchCursos = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/cursos`);
-      setCursos(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar os cursos:", error);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === "cp_tr_id_escola") {
-      setTurmaData((prev) => ({ ...prev, [name]: value, cp_tr_alunos: [] }));
-    } else {
-      setTurmaData((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-
-  const normalizeString = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-  const handleSearchChange = (e) => {
-    const searchValue = normalizeString(e.target.value);
-    setSearchTerm(e.target.value);
-
-    const alunosFiltrados = alunosPorEscola.filter(aluno =>
-      normalizeString(aluno.cp_nome).includes(searchValue)
-    );
-
-    setAlunosFiltrados(alunosFiltrados);
-  };
-
-
-  const handleCheckboxChange = (e, alunoId) => {
-    const isChecked = e.target.checked;
-    setTurmaData((prevData) => {
-      const updatedAlunos = isChecked
-        ? [...prevData.cp_tr_alunos, alunoId]
-        : prevData.cp_tr_alunos.filter((id) => id !== alunoId);
-
-      return { ...prevData, cp_tr_alunos: updatedAlunos };
-    });
-  };
-
-  const handleAlunoChange = (alunoId) => {
-    setTurmaData((prev) => {
-      const alunosSelecionados = prev.cp_tr_alunos.includes(alunoId)
-        ? prev.cp_tr_alunos.filter((id) => id !== alunoId)
-        : [...prev.cp_tr_alunos, alunoId];
-
-      return { ...prev, cp_tr_alunos: alunosSelecionados };
-    });
-  };
-
-  const handleDiasSemanaChange = (e) => {
-    const { value, checked } = e.target;
-    setTurmaData((prev) => {
-      const diasSelecionados = checked
-        ? [...prev.cp_tr_dias_semana, value]
-        : prev.cp_tr_dias_semana.filter((dia) => dia !== value);
-
-      return { ...prev, cp_tr_dias_semana: diasSelecionados };
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const dataToSend = {
-        cp_tr_nome: turmaData.cp_tr_nome,
-        cp_tr_data: turmaData.cp_tr_data,
-        cp_tr_id_professor: turmaData.cp_tr_id_professor,
-        cp_tr_id_escola: turmaData.cp_tr_id_escola,
-        cp_tr_curso_id: turmaData.cp_tr_curso_id,
-        cp_tr_alunos: turmaData.cp_tr_alunos,
-        cp_tr_dias_semana: turmaData.cp_tr_dias_semana
-      };
-
-      let response;
-
-      if (turmaID) {
-        // Atualizar turma existente
-        response = await axios.put(`${API_BASE_URL}/update-turma/${turmaID}`, dataToSend);
-        toast.success("Turma atualizada com sucesso!");
-      } else {
-        // Criar nova turma
-        response = await axios.post(`${API_BASE_URL}/register-turma`, dataToSend);
-        toast.success("Turma cadastrada com sucesso!");
-        // Limpar campos após cadastrar
-        setTurmaData({
-          cp_tr_nome: "",
-          cp_tr_data: "",
-          cp_tr_id_professor: "",
-          cp_tr_id_escola: "",
-          cp_tr_curso_id: "",
-          cp_tr_alunos: [],
-          cp_tr_dias_semana: []
-        });
-      }
-
-      if (response.status === 200) {
-        setShowModal(false); // Fecha o modal
-      }
-    } catch (error) {
-      console.error("Erro ao salvar a turma:", error);
-      toast.error("Erro ao salvar a turma");
-    }
-  };
-
-
-  return (
-    <div>
-      <ToastContainer />
-      <form className="form-container-cad" onSubmit={handleSubmit}>
-        <Row>
-          <Col md={6}>
-            <div className="card mb-3">
-              <div className="card-header">
-                <h6 className="card-title mb-0">Informações da Turma</h6>
-              </div>
-              <div className="card-body">
-                <Row className="gy-3">
-                  <Col md={12}>
-                    <label htmlFor="cp_tr_nome">Nome<span className="required">*</span>:</label>
-                    <input
-                      type="text"
-                      id="cp_tr_nome"
-                      name="cp_tr_nome"
-                      value={turmaData.cp_tr_nome}
-                      onChange={handleChange}
-                      className="form-control"
-                      placeholder="Nome da turma"
-                      required
-                    />
-                  </Col>
-                  <Col md={12}>
-                    <label htmlFor="cp_tr_data">Data<span className="required">*</span>:</label>
-                    <input
-                      type="date"
-                      id="cp_tr_data"
-                      name="cp_tr_data"
-                      value={turmaData.cp_tr_data}
-                      onChange={handleChange}
-                      className="form-control"
-                      required
-                    />
-                  </Col>
-                  <Col md={12}>
-                    <label htmlFor="cp_tr_id_professor">Professor<span className="required">*</span>:</label>
-                    <select
-                      id="cp_tr_id_professor"
-                      name="cp_tr_id_professor"
-                      value={turmaData.cp_tr_id_professor}
-                      onChange={handleChange}
-                      className="form-control"
-                      required
-                    >
-                      <option value="">Selecione o professor</option>
-                      {professores.map((professor) => (
-                        <option key={professor.cp_id} value={professor.cp_id}>
-                          {professor.cp_nome}
-                        </option>
-                      ))}
-                    </select>
-                  </Col>
-                </Row>
-              </div>
+    return (
+        <div className="dashboard-main-body">
+            <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
+                <h6 className="fw-semibold mb-0">{isEdit ? 'Editar' : 'Cadastrar'} Turma</h6>
             </div>
 
-            <div className="card mb-3">
-              <div className="card-header">
-                <h6 className="card-title mb-0">Detalhes Adicionais</h6>
-              </div>
-              <div className="card-body">
-                <Row className="gy-3">
-                  <Col md={12}>
-                    <label htmlFor="cp_tr_id_escola">Escola<span className="required">*</span>:</label>
-                    <select
-                      id="cp_tr_id_escola"
-                      name="cp_tr_id_escola"
-                      value={turmaData.cp_tr_id_escola}
-                      onChange={handleChange}
-                      className="form-control"
-                      required
-                    >
-                      <option value="" disabled>Selecione uma escola</option>
-                      {escolas.map((escola) => (
-                        <option key={escola.cp_ec_id} value={escola.cp_ec_id}>
-                          {escola.cp_ec_nome}
-                        </option>
-                      ))}
-                    </select>
-                  </Col>
-
-                  <Col md={12}>
-                    <label htmlFor="cp_tr_curso_id">Curso<span className="required">*</span>:</label>
-                    <select
-                      id="cp_tr_curso_id"
-                      name="cp_tr_curso_id"
-                      value={turmaData.cp_tr_curso_id}
-                      onChange={handleChange}
-                      className="form-control"
-                      required
-                    >
-                      <option value="">Selecione o curso</option>
-                      {cursos.map((curso) => (
-                        <option key={curso.id} value={curso.id}>
-                          {curso.titulo}
-                        </option>
-                      ))}
-                    </select>
-                  </Col>
-
-                  <Col md={12}>
-                    <label>Dias da Semana<span className="required">*</span>:</label>
-                    <div className="d-flex flex-wrap gap-3 mt-2">
-                      {[
-                        { value: "segunda", label: "Segunda" },
-                        { value: "terca", label: "Terça" },
-                        { value: "quarta", label: "Quarta" },
-                        { value: "quinta", label: "Quinta" },
-                        { value: "sexta", label: "Sexta" },
-                        { value: "sabado", label: "Sábado" },
-                        { value: "domingo", label: "Domingo" }
-                      ].map((dia) => (
-                        <Form.Check
-                          key={dia.value}
-                          type="checkbox"
-                          id={`dia-${dia.value}`}
-                          label={dia.label}
-                          value={dia.value}
-                          checked={turmaData.cp_tr_dias_semana.includes(dia.value)}
-                          onChange={handleDiasSemanaChange}
-                          className="d-flex align-items-center"
-                        />
-                      ))}
-                    </div>
-                  </Col>
-                </Row>
-              </div>
-            </div>
-          </Col>
-
-          <Col md={6}>
-            <div className="card mb-3">
-              <div className="card-header">
-                <h6 className="card-title mb-0">Alunos</h6>
-              </div>
-              <div className="card-body">
-                <Row className="gy-3">
-                  <Col md={12}>
-                    <label htmlFor="search">Buscar Aluno:</label>
-                    <div className="input-group">
-                      <input
-                        type="text"
-                        id="search"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="form-control"
-                        placeholder="Digite o nome do aluno"
-                      />
-                      <Button variant="outline-secondary">
-                        <FaSearch />
-                      </Button>
-                    </div>
-                  </Col>
-
-                  <Col md={12}>
-                    <div className="table-container">
-                      {alunosFiltrados.length > 0 ? (
-                        <div className="table-responsive overflow-auto" style={{ maxHeight: "300px" }}>
-                          <Table striped bordered hover className="overflow-auto">
-                            <thead>
-                              <tr>
-                                <th>#</th>
-                                <th>Nome</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {alunosFiltrados.map((aluno) => (
-                                <tr key={aluno.id}>
-                                  <td>
-                                    <Form.Check
-                                      type="checkbox"
-                                      checked={Array.isArray(turmaData.cp_tr_alunos) && turmaData.cp_tr_alunos.includes(aluno.id)}
-                                      onChange={(e) => handleCheckboxChange(e, aluno.id)}
-                                    />
-
-                                  </td>
-                                  <td>{aluno.cp_nome}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </Table>
+            <div className="row gy-4">
+                <div className="col-md-12">
+                    <div className="card">
+                        <div className="card-header">
+                            <h6 className="card-title mb-0">Informações da Turma</h6>
                         </div>
-                      ) : (
-                        <p className="text-muted">Nenhum aluno encontrado. Selecione uma escola!</p>
-                      )}
+                        <div className="card-body">
+                            <form onSubmit={handleSubmit}>
+                                <div className="row gy-3">
+                                    <div className="col-md-6">
+                                        <label className="form-label">Nome da Turma</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            name="cp_tr_nome"
+                                            value={formData.cp_tr_nome}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </div>
 
+                                    <div className="col-md-6">
+                                        <label className="form-label">Data de Início</label>
+                                        <input
+                                            type="date"
+                                            className="form-control"
+                                            name="cp_tr_data"
+                                            value={formData.cp_tr_data}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="col-md-6">
+                                        <label className="form-label">Escola</label>
+                                        <select
+                                            className="form-control"
+                                            name="cp_tr_id_escola"
+                                            value={formData.cp_tr_id_escola}
+                                            onChange={handleInputChange}
+                                            required
+                                        >
+                                            <option value="">Selecione uma escola</option>
+                                            {escolas.map(escola => (
+                                                <option key={escola.id} value={escola.id}>
+                                                    {escola.nome}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="col-md-6">
+                                        <label className="form-label">Professor</label>
+                                        <select
+                                            className="form-control"
+                                            name="cp_tr_id_professor"
+                                            value={formData.cp_tr_id_professor}
+                                            onChange={handleInputChange}
+                                        >
+                                            <option value="">Selecione um professor</option>
+                                            {professores.map(prof => (
+                                                <option key={prof.cp_id} value={prof.cp_id}>
+                                                    {prof.cp_nome}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="col-md-6">
+                                        <label className="form-label">Curso</label>
+                                        <select
+                                            className="form-control"
+                                            name="cp_tr_curso_id"
+                                            value={formData.cp_tr_curso_id}
+                                            onChange={handleInputChange}
+                                        >
+                                            <option value="">Selecione um curso</option>
+                                            {cursos.map(curso => (
+                                                <option key={curso.id} value={curso.id}>
+                                                    {curso.titulo}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="col-md-12">
+                                        <label className="form-label">Dias da Semana</label>
+                                        <div className="d-flex flex-wrap gap-3">
+                                            {diasSemana.map(dia => (
+                                                <div key={dia.value} className="form-check">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id={dia.value}
+                                                        checked={formData.cp_tr_dias_semana.includes(dia.value)}
+                                                        onChange={() => handleDiasSemanaChange(dia.value)}
+                                                    />
+                                                    <label className="form-check-label" htmlFor={dia.value}>
+                                                        {dia.label}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="col-md-12">
+                                        <label className="form-label">Alunos da Turma</label>
+                                        <div className="row">
+                                            {alunos.map(aluno => (
+                                                <div key={aluno.id} className="col-md-4 mb-2">
+                                                    <div className="form-check">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="checkbox"
+                                                            id={`aluno-${aluno.id}`}
+                                                            checked={formData.cp_tr_alunos.includes(aluno.id)}
+                                                            onChange={() => handleAlunosChange(aluno.id)}
+                                                        />
+                                                        <label className="form-check-label" htmlFor={`aluno-${aluno.id}`}>
+                                                            {aluno.nome}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="col-md-12">
+                                        <button
+                                            type="submit"
+                                            className="btn btn-primary"
+                                            disabled={loading}
+                                        >
+                                            {loading ? 'Salvando...' : (isEdit ? 'Atualizar' : 'Cadastrar')} Turma
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary ms-2"
+                                            onClick={() => navigate('/turma')}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                  </Col>
-                </Row>
-              </div>
+                </div>
             </div>
-          </Col>
-        </Row>
-
-        <div className="mt-4 text-center">
-          <Button variant="primary" onClick={handleShowModal}>
-            {turmaID ? "Salvar Alterações" : "Cadastrar Turma"}
-          </Button>
         </div>
-      </form>
-      <Modal show={showModal} onHide={handleCloseModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmar Cadastro</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Tem certeza que deseja {turmaID ? "salvar as alterações" : "cadastrar esta turma"}?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={handleSubmit}>
-            Confirmar
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-    </div>
-  );
+    );
 };
 
-export default CadastroTurmaModal;
+export default CadastroTurma;
