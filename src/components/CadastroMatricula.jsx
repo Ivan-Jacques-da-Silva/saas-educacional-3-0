@@ -540,13 +540,11 @@ const CadastroMatricula = ({
     useEffect(() => {
         const hasAdditionalData =
             matriculaData.escolaridade !== "" ||
-            matriculaData.localNascimento !== "" ||
             matriculaData.redeSocial !== "";
 
         setShowAdditionalFields(hasAdditionalData);
     }, [
         matriculaData.escolaridade,
-        matriculaData.localNascimento,
         matriculaData.redeSocial,
     ]);
 
@@ -605,14 +603,14 @@ const CadastroMatricula = ({
                             <div className="card-body">
                                 <Row className="gy-3">
                                     {matriculaId ? (
-                                        // Edição: Apenas exibe os dados sem permitir edição
+                                        // Edição: Mostra o nome do usuário dos dados carregados
                                         <Col md={12}>
                                             <label htmlFor="nomeUsuario">Usuário:</label>
                                             <input
                                                 type="text"
                                                 id="nomeUsuario"
                                                 name="nomeUsuario"
-                                                value={matriculaData.nomeUsuario || ""}
+                                                value={dadosUsuario.nome || matriculaData.nomeUsuario || ""}
                                                 className="form-control"
                                                 placeholder="Nome do usuário"
                                                 required
@@ -693,10 +691,9 @@ const CadastroMatricula = ({
                                             type="text"
                                             id="endereco"
                                             name="endereco"
-                                            value={`${dadosUsuario.endereco || ""}`}
+                                            value={dadosUsuario.endereco || `${dadosUsuario.endCidadeEstado || ""}, ${dadosUsuario.endRua || ""}, ${dadosUsuario.endNum || ""}` || matriculaData.endereco || ""}
                                             className="form-control"
                                             placeholder="Endereço"
-                                            rows={2}
                                             readOnly
                                         />
                                     </Col>
@@ -803,23 +800,7 @@ const CadastroMatricula = ({
                                                     <option value="Outra Graduação">Outra Graduação</option>
                                                 </select>
                                             </Col>
-                                            <Col md={12}>
-                                                <label htmlFor="localNascimento">Local de Nascimento:</label>
-                                                <input
-                                                    type="text"
-                                                    id="localNascimento"
-                                                    name="localNascimento"
-                                                    value={matriculaData.localNascimento}
-                                                    onChange={(e) =>
-                                                        setMatriculaData({
-                                                            ...matriculaData,
-                                                            localNascimento: e.target.value,
-                                                        })
-                                                    }
-                                                    className="form-control"
-                                                    placeholder="Local de Nascimento"
-                                                />
-                                            </Col>
+                                            
                                             <Col md={12}>
                                                 <label htmlFor="redeSocial">Link de Rede Social:</label>
                                                 <input
@@ -854,26 +835,38 @@ const CadastroMatricula = ({
                                 <Row className="gy-3">
                                     <Col md={12}>
                                         <label htmlFor="cursoId">Curso:</label>
-                                        <select
-                                            id="cursoId"
-                                            name="cursoId"
-                                            value={matriculaData.cursoId}
-                                            onChange={(e) =>
-                                                setMatriculaData({
-                                                    ...matriculaData,
-                                                    cursoId: e.target.value,
-                                                })
-                                            }
-                                            className="form-control"
-                                            required
-                                        >
-                                            <option value="">Selecione o curso</option>
-                                            {cursos.map((curso) => (
-                                                <option key={curso.id} value={curso.id}>
-                                                    {curso.titulo}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {matriculaId ? (
+                                            <input
+                                                type="text"
+                                                id="cursoNome"
+                                                name="cursoNome"
+                                                value={cursos.find(curso => curso.id === matriculaData.cursoId)?.titulo || ""}
+                                                className="form-control"
+                                                placeholder="Curso"
+                                                readOnly
+                                            />
+                                        ) : (
+                                            <select
+                                                id="cursoId"
+                                                name="cursoId"
+                                                value={matriculaData.cursoId}
+                                                onChange={(e) =>
+                                                    setMatriculaData({
+                                                        ...matriculaData,
+                                                        cursoId: e.target.value,
+                                                    })
+                                                }
+                                                className="form-control"
+                                                required
+                                            >
+                                                <option value="">Selecione o curso</option>
+                                                {cursos.map((curso) => (
+                                                    <option key={curso.id} value={curso.id}>
+                                                        {curso.titulo}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
                                     </Col>
                                     <Col md={12}>
                                         <label htmlFor="nivelIdioma">Nível do Idioma:</label>
@@ -1011,26 +1004,6 @@ const CadastroMatricula = ({
                                                     </option>
                                                 ))}
                                             </select>
-                                        </Col>
-                                    )}
-                                    {matriculaData.tipoCobranca === 'mensalidade' && (
-                                        <Col md={12}>
-                                            <label htmlFor="valorMensalidade">Valor da Mensalidade:</label>
-                                            <input
-                                                type="number"
-                                                id="valorMensalidade"
-                                                name="valorMensalidade"
-                                                value={matriculaData.valorMensalidade}
-                                                onChange={(e) =>
-                                                    setMatriculaData({
-                                                        ...matriculaData,
-                                                        valorMensalidade: e.target.value,
-                                                    })
-                                                }
-                                                className="form-control"
-                                                placeholder="Valor da Mensalidade"
-                                                required
-                                            />
                                         </Col>
                                     )}
                                     <Col md={12}>
